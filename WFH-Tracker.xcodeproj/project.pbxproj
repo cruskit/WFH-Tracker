@@ -45,6 +45,11 @@
 			path = "WFH-TrackerUITests";
 			sourceTree = "<group>";
 		};
+		DA1FC4792E11539E00C9C416 /* requirements */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = requirements;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,6 +80,7 @@
 		DA1FC4452E11529500C9C416 = {
 			isa = PBXGroup;
 			children = (
+				DA1FC4792E11539E00C9C416 /* requirements */,
 				DA1FC4502E11529500C9C416 /* WFH-Tracker */,
 				DA1FC45E2E11529900C9C416 /* WFH-TrackerTests */,
 				DA1FC4682E11529900C9C416 /* WFH-TrackerUITests */,
@@ -109,6 +115,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				DA1FC4502E11529500C9C416 /* WFH-Tracker */,
+				DA1FC4792E11539E00C9C416 /* requirements */,
 			);
 			name = "WFH-Tracker";
 			packageProductDependencies = (
@@ -195,6 +202,9 @@
 			);
 			mainGroup = DA1FC4452E11529500C9C416;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				DA1FC4782E11533800C9C416 /* XCRemoteSwiftPackageReference "Inject" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DA1FC44F2E11529500C9C416 /* Products */;
 			projectDirPath = "";
@@ -550,6 +560,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DA1FC4782E11533800C9C416 /* XCRemoteSwiftPackageReference "Inject" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krzysztofzablocki/Inject.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = DA1FC4462E11529500C9C416 /* Project object */;
 }
