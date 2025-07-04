@@ -29,18 +29,6 @@ struct TotalsCard: View {
                         .fontWeight(.medium)
                         .foregroundColor(.blue)
                 }
-                
-                Divider()
-                
-                HStack {
-                    Text("Total Hours:")
-                        .fontWeight(.semibold)
-                        .foregroundColor(.primary)
-                    Spacer()
-                    Text(String(format: "%.1f", totals.totalHours))
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
-                }
             }
         }
         .padding(16)
