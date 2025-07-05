@@ -19,6 +19,7 @@ struct WorkHoursEntryViewTests {
         let view = WorkHoursEntryView(
             date: testDate,
             existingWorkDay: testWorkDay,
+            existingWorkDays: [testWorkDay],
             onSave: { _ in },
             onCancel: { }
         )
@@ -33,6 +34,7 @@ struct WorkHoursEntryViewTests {
         let view = WorkHoursEntryView(
             date: testDate,
             existingWorkDay: nil,
+            existingWorkDays: [],
             onSave: { _ in },
             onCancel: { }
         )

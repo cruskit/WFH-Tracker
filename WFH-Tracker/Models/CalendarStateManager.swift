@@ -110,6 +110,14 @@ class CalendarStateManager: ObservableObject {
         }
     }
     
+    func getWorkDays(for dates: [Date]) -> [WorkDay] {
+        return workDays.filter { workDay in
+            dates.contains { date in
+                calendar.isDate(workDay.date, inSameDayAs: date)
+            }
+        }
+    }
+    
     func updateWorkDay(_ workDay: WorkDay) {
         if let index = workDays.firstIndex(where: { day in
             calendar.isDate(day.date, inSameDayAs: workDay.date)

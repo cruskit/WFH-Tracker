@@ -3,11 +3,11 @@ import SwiftUI
 struct WorkHoursEntryView: View {
     let date: Date
     let existingWorkDay: WorkDay?
-    let onSave: (WorkDay) -> Void
+    let existingWorkDays: [WorkDay]
+    let onSave: ([WorkDay]) -> Void
     let onCancel: () -> Void
     
-    @State private var homeHours: String = ""
-    @State private var officeHours: String = ""
+    @State private var weeklyHours: [Date: (home: String, office: String)] = [:]
     @State private var showingValidationError = false
     @State private var validationMessage = ""
     
@@ -18,175 +18,300 @@ struct WorkHoursEntryView: View {
         return formatter
     }()
     
+    private let shortDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE, MMM d"
+        return formatter
+    }()
+    
+    private let dayNameFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE"
+        return formatter
+    }()
+    
     var body: some View {
-        VStack(spacing: 24) {
-            // Date Header
+        VStack(spacing: 20) {
+            // Header
             VStack(spacing: 8) {
-                Text("Working Location Hours")
+                Text("Weekly Working Hours")
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
                 
-                Text(dateFormatter.string(from: date))
+                Text("Week of \(weekStartDateString)")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
             .padding(.top, 16)
+            
+            // Table Header
+            HStack(spacing: 0) {
+                Text("Day")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+                    .frame(width: 80, alignment: .leading)
                 
-                // Hours Input Section
-                VStack(spacing: 20) {
-                    // Home Hours
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Image(systemName: "house.fill")
-                                .foregroundColor(.green)
-                            Text("Home Hours")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                        }
-                        
-                        HStack {
-                            TextField("0.0", text: $homeHours)
-                                .keyboardType(.decimalPad)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .frame(maxWidth: .infinity)
-                            
-                            Button("8") {
-                                homeHours = "8.0"
-                            }
-                            .buttonStyle(QuickButtonStyle())
-                        }
-                    }
-                    
-                    // Office Hours
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Image(systemName: "building.2.fill")
-                                .foregroundColor(.blue)
-                            Text("Office Hours")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                        }
-                        
-                        HStack {
-                            TextField("0.0", text: $officeHours)
-                                .keyboardType(.decimalPad)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .frame(maxWidth: .infinity)
-                            
-                            Button("8") {
-                                officeHours = "8.0"
-                            }
-                            .buttonStyle(QuickButtonStyle())
-                        }
-                    }
-                }
-                .padding(.horizontal, 20)
-                
-                // Total Hours Display
-                VStack(spacing: 8) {
-                    Text("Total Hours")
+                HStack(spacing: 40) {
+                    Text("Home")
                         .font(.subheadline)
+                        .fontWeight(.medium)
                         .foregroundColor(.secondary)
+                        .frame(width: 120, alignment: .center)
                     
-                    Text(String(format: "%.1f", totalHours))
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
+                    Text("Office")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+                        .frame(width: 120, alignment: .center)
                 }
-                .padding(.vertical, 16)
-                .frame(maxWidth: .infinity)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(.systemGray6))
-                )
-                .padding(.horizontal, 20)
                 
                 Spacer()
-                
-                // Action Buttons
-                VStack(spacing: 12) {
-                    Button("Save") {
-                        saveWorkDay()
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 8)
+            
+            // Table Rows
+            ScrollView {
+                VStack(spacing: 0) {
+                    ForEach(Array(weekDates.enumerated()), id: \.element) { index, date in
+                        TableRow(
+                            date: date,
+                            homeHours: weeklyHours[date]?.home ?? "",
+                            officeHours: weeklyHours[date]?.office ?? "",
+                            onHomeHoursChange: { newValue in
+                                weeklyHours[date] = (home: newValue, office: weeklyHours[date]?.office ?? "")
+                            },
+                            onOfficeHoursChange: { newValue in
+                                weeklyHours[date] = (home: weeklyHours[date]?.home ?? "", office: newValue)
+                            },
+                            onQuickHome8: {
+                                weeklyHours[date] = (home: "8.0", office: weeklyHours[date]?.office ?? "")
+                            },
+                            onQuickOffice8: {
+                                weeklyHours[date] = (home: weeklyHours[date]?.home ?? "", office: "8.0")
+                            },
+                            isLast: index == weekDates.count - 1
+                        )
                     }
-                    .buttonStyle(PrimaryButtonStyle())
-                    .disabled(!isValidInput)
-                    
-                    Button("Cancel") {
-                        onCancel()
-                    }
-                    .buttonStyle(SecondaryButtonStyle())
                 }
                 .padding(.horizontal, 20)
-                .padding(.bottom, 20)
             }
-            .alert("Invalid Input", isPresented: $showingValidationError) {
-                Button("OK") { }
-            } message: {
-                Text(validationMessage)
+            
+            Spacer()
+            
+            // Action Buttons
+            VStack(spacing: 12) {
+                Button("Save") {
+                    saveWorkDays()
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(!isValidInput)
+                
+                Button("Cancel") {
+                    onCancel()
+                }
+                .buttonStyle(SecondaryButtonStyle())
             }
-            .onAppear {
-                print("WorkHoursEntryView appeared for date: \(date)")
-                loadExistingData()
-            }
-            .background(Color(.systemBackground))
+            .padding(.horizontal, 20)
+            .padding(.bottom, 20)
+        }
+        .alert("Invalid Input", isPresented: $showingValidationError) {
+            Button("OK") { }
+        } message: {
+            Text(validationMessage)
+        }
+        .onAppear {
+            print("WorkHoursEntryView appeared for date: \(date)")
+            loadExistingData()
+        }
+        .background(Color(.systemBackground))
     }
     
-    private var totalHours: Double {
-        let home = Double(homeHours) ?? 0
-        let office = Double(officeHours) ?? 0
-        return home + office
+    private var weekDates: [Date] {
+        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: date)?.start ?? date
+        var dates: [Date] = []
+        
+        for i in 0..<7 {
+            if let weekDate = calendar.date(byAdding: .day, value: i, to: startOfWeek) {
+                dates.append(weekDate)
+            }
+        }
+        
+        return dates
+    }
+    
+    private var weekStartDateString: String {
+        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: date)?.start ?? date
+        return shortDateFormatter.string(from: startOfWeek)
+    }
+    
+    private var weeklyTotalHours: Double {
+        weekDates.reduce(0) { total, date in
+            let home = Double(weeklyHours[date]?.home ?? "0") ?? 0
+            let office = Double(weeklyHours[date]?.office ?? "0") ?? 0
+            return total + home + office
+        }
     }
     
     private var isValidInput: Bool {
-        let home = Double(homeHours) ?? 0
-        let office = Double(officeHours) ?? 0
-        
-        return home >= 0 && office >= 0 && 
-               home <= 24 && office <= 24 && 
-               totalHours <= 24
+        for date in weekDates {
+            let home = Double(weeklyHours[date]?.home ?? "0") ?? 0
+            let office = Double(weeklyHours[date]?.office ?? "0") ?? 0
+            
+            if home < 0 || office < 0 || home > 24 || office > 24 || (home + office) > 24 {
+                return false
+            }
+        }
+        return true
     }
     
     private func loadExistingData() {
-        if let workDay = existingWorkDay {
-            homeHours = workDay.homeHours.map { String(format: "%.1f", $0) } ?? ""
-            officeHours = workDay.officeHours.map { String(format: "%.1f", $0) } ?? ""
+        // Load existing data for all days in the week
+        for weekDate in weekDates {
+            if let workDay = existingWorkDays.first(where: { calendar.isDate($0.date, inSameDayAs: weekDate) }) {
+                let homeHours = workDay.homeHours.map { String(format: "%.1f", $0) } ?? ""
+                let officeHours = workDay.officeHours.map { String(format: "%.1f", $0) } ?? ""
+                weeklyHours[weekDate] = (home: homeHours, office: officeHours)
+            }
         }
     }
     
-    private func incrementHours(for field: inout String, by amount: Double) {
-        let currentValue = Double(field) ?? 0
-        let newValue = currentValue + amount
-        if newValue <= 24 {
-            field = String(format: "%.1f", newValue)
-        }
-    }
-    
-    private func saveWorkDay() {
+    private func saveWorkDays() {
         guard isValidInput else {
-            validationMessage = "Please enter valid hours (0-24 total)"
+            validationMessage = "Please enter valid hours (0-24 per day, 0-24 total per day)"
             showingValidationError = true
             return
         }
         
-        let home = Double(homeHours) ?? 0
-        let office = Double(officeHours) ?? 0
+        var workDaysToSave: [WorkDay] = []
         
-        // Only save if at least one value is greater than 0
-        let homeHoursValue = home > 0 ? home : nil
-        let officeHoursValue = office > 0 ? office : nil
+        for weekDate in weekDates {
+            if let hours = weeklyHours[weekDate] {
+                let home = Double(hours.home) ?? 0
+                let office = Double(hours.office) ?? 0
+                
+                // Only save if at least one value is greater than 0
+                let homeHoursValue = home > 0 ? home : nil
+                let officeHoursValue = office > 0 ? office : nil
+                
+                let workDay = WorkDay(
+                    date: weekDate,
+                    homeHours: homeHoursValue,
+                    officeHours: officeHoursValue
+                )
+                
+                workDaysToSave.append(workDay)
+            }
+        }
         
-        let workDay = WorkDay(
-            date: date,
-            homeHours: homeHoursValue,
-            officeHours: officeHoursValue
-        )
-        
-        onSave(workDay)
+        onSave(workDaysToSave)
     }
 }
 
-// MARK: - Custom Button Styles
+// MARK: - Table Row Component
+
+struct TableRow: View {
+    let date: Date
+    let homeHours: String
+    let officeHours: String
+    let onHomeHoursChange: (String) -> Void
+    let onOfficeHoursChange: (String) -> Void
+    let onQuickHome8: () -> Void
+    let onQuickOffice8: () -> Void
+    let isLast: Bool
+    
+    private let calendar = Calendar.current
+    private let dayNameFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE"
+        return formatter
+    }()
+    
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter
+    }()
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                // Day Column
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(dayNameFormatter.string(from: date))
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                    
+                    Text(dateFormatter.string(from: date))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(width: 80, alignment: .leading)
+                
+                // Home Hours Column
+                HStack(spacing: 4) {
+                    TextField("0.0", text: Binding(
+                        get: { homeHours },
+                        set: { onHomeHoursChange($0) }
+                    ))
+                    .keyboardType(.decimalPad)
+                    .textFieldStyle(TableTextFieldStyle())
+                    .frame(width: 60)
+                    
+                    Button("8") {
+                        onQuickHome8()
+                    }
+                    .buttonStyle(QuickButtonStyle())
+                }
+                .frame(width: 120)
+                
+                // Office Hours Column
+                HStack(spacing: 4) {
+                    TextField("0.0", text: Binding(
+                        get: { officeHours },
+                        set: { onOfficeHoursChange($0) }
+                    ))
+                    .keyboardType(.decimalPad)
+                    .textFieldStyle(TableTextFieldStyle())
+                    .frame(width: 60)
+                    
+                    Button("8") {
+                        onQuickOffice8()
+                    }
+                    .buttonStyle(QuickButtonStyle())
+                }
+                .frame(width: 120)
+            }
+            .padding(.vertical, 12)
+            .padding(.horizontal, 16)
+            .background(Color(.systemBackground))
+            
+            if !isLast {
+                Divider()
+                    .padding(.leading, 96)
+            }
+        }
+    }
+}
+
+// MARK: - Custom Styles
+
+struct TableTextFieldStyle: TextFieldStyle {
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .font(.subheadline)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color(.systemGray6))
+            )
+    }
+}
 
 struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
@@ -221,12 +346,12 @@ struct SecondaryButtonStyle: ButtonStyle {
 struct QuickButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.headline)
+            .font(.caption)
             .fontWeight(.medium)
             .foregroundColor(.blue)
-            .frame(width: 60, height: 44)
+            .frame(width: 40, height: 24)
             .background(
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: 4)
                     .fill(Color.blue.opacity(0.1))
                     .opacity(configuration.isPressed ? 0.8 : 1.0)
             )
@@ -240,6 +365,7 @@ struct QuickButtonStyle: ButtonStyle {
     WorkHoursEntryView(
         date: sampleDate,
         existingWorkDay: sampleWorkDay,
+        existingWorkDays: [sampleWorkDay],
         onSave: { _ in },
         onCancel: { }
     )

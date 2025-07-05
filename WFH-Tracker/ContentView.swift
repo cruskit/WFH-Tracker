@@ -38,6 +38,20 @@ struct ContentView: View {
         return CalendarMonth(date: date)
     }
     
+    private func getWeekDates(for date: Date) -> [Date] {
+        let calendar = Calendar.current
+        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: date)?.start ?? date
+        var dates: [Date] = []
+        
+        for i in 0..<7 {
+            if let weekDate = calendar.date(byAdding: .day, value: i, to: startOfWeek) {
+                dates.append(weekDate)
+            }
+        }
+        
+        return dates
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             // Navigation Header
@@ -79,11 +93,17 @@ struct ContentView: View {
         }
         .background(Color(.systemBackground))
         .sheet(item: $selectedDate) { identifiableDate in
+            let weekDates = getWeekDates(for: identifiableDate.date)
+            let existingWorkDays = calendarManager.getWorkDays(for: weekDates)
+            
             WorkHoursEntryView(
                 date: identifiableDate.date,
                 existingWorkDay: calendarManager.getWorkDay(for: identifiableDate.date),
-                onSave: { workDay in
-                    calendarManager.updateWorkDay(workDay)
+                existingWorkDays: existingWorkDays,
+                onSave: { workDays in
+                    for workDay in workDays {
+                        calendarManager.updateWorkDay(workDay)
+                    }
                     selectedDate = nil
                 },
                 onCancel: {
