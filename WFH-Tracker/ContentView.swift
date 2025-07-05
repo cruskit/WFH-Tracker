@@ -18,6 +18,26 @@ struct ContentView: View {
     @State private var selectedDate: IdentifiableDate?
     @State private var showingWorkHoursEntry = false
     
+    private func getFinancialYear(for month: CalendarMonth) -> Int {
+        // Financial year runs from July 1 to June 30
+        // If month is July or later, financial year is current year + 1
+        // If month is January to June, financial year is current year
+        if month.month >= 7 {
+            return month.year + 1
+        } else {
+            return month.year
+        }
+    }
+    
+    private func getFinancialYearDate(for month: CalendarMonth) -> CalendarMonth {
+        let financialYear = getFinancialYear(for: month)
+        // Create a date in July of the financial year start
+        let calendar = Calendar.current
+        let components = DateComponents(year: financialYear - 1, month: 7, day: 1)
+        let date = calendar.date(from: components) ?? Date()
+        return CalendarMonth(date: date)
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             // Navigation Header
@@ -43,15 +63,15 @@ struct ContentView: View {
             }
             
             // Totals Section
-            VStack(spacing: 16) {
+            HStack(spacing: 16) {
                 TotalsCard(
-                    title: "Monthly Totals",
+                    title: calendarManager.currentMonth.monthName,
                     totals: calendarManager.getMonthlyTotals(for: calendarManager.currentMonth)
                 )
                 
                 TotalsCard(
-                    title: "Yearly Totals",
-                    totals: calendarManager.getYearlyTotals(for: calendarManager.currentMonth)
+                    title: "FY \(getFinancialYear(for: calendarManager.currentMonth))",
+                    totals: calendarManager.getYearlyTotals(for: getFinancialYearDate(for: calendarManager.currentMonth))
                 )
             }
             .padding(.horizontal, 20)

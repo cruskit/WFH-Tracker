@@ -13,19 +13,19 @@ struct TotalsCard: View {
             
             VStack(spacing: 8) {
                 HStack {
-                    Text("Home Hours:")
+                    Text("Home:")
                         .foregroundColor(.secondary)
                     Spacer()
-                    Text(String(format: "%.1f", totals.homeHours))
+                    Text(String(format: "%.0fh / %dd", totals.homeHours, Int(round(totals.homeHours / 8.0))))
                         .fontWeight(.medium)
                         .foregroundColor(.green)
                 }
                 
                 HStack {
-                    Text("Office Hours:")
+                    Text("Office:")
                         .foregroundColor(.secondary)
                     Spacer()
-                    Text(String(format: "%.1f", totals.officeHours))
+                    Text(String(format: "%.0fh / %dd", totals.officeHours, Int(round(totals.officeHours / 8.0))))
                         .fontWeight(.medium)
                         .foregroundColor(.blue)
                 }

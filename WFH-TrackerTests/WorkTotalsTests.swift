@@ -110,4 +110,6 @@ struct WorkTotalsTests {
         #expect(yearlyTotals.officeHours == 0.0)
         #expect(yearlyTotals.totalHours == 0.0)
     }
+    
+
 } 

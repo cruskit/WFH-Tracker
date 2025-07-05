@@ -9,6 +9,7 @@ class CalendarStateManager: ObservableObject {
     @Published var isLoading: Bool = false
     
     private let calendar = Calendar.current
+    private var hasInitializedData = false
     
     init(initialDate: Date = Date()) {
         let currentMonth = CalendarMonth(date: initialDate)
@@ -25,19 +26,19 @@ class CalendarStateManager: ObservableObject {
     func scrollToMonth(_ month: CalendarMonth) {
         currentMonth = month
         updateVisibleMonths()
-        loadWorkData()
+        // Don't reload data when just navigating between months
     }
     
     func nextMonth() {
         currentMonth = currentMonth.nextMonth()
         updateVisibleMonths()
-        loadWorkData()
+        // Don't reload data when just navigating between months
     }
     
     func previousMonth() {
         currentMonth = currentMonth.previousMonth()
         updateVisibleMonths()
-        loadWorkData()
+        // Don't reload data when just navigating between months
     }
     
     private func updateVisibleMonths() {
@@ -49,6 +50,11 @@ class CalendarStateManager: ObservableObject {
     // MARK: - Data Loading
     
     private func loadWorkData() {
+        // Only generate sample data once during initialization
+        if hasInitializedData {
+            return
+        }
+        
         isLoading = true
         
         // Load data for visible months
@@ -60,6 +66,7 @@ class CalendarStateManager: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.generateSampleData(for: startDate, to: endDate)
             self.isLoading = false
+            self.hasInitializedData = true
         }
     }
     
