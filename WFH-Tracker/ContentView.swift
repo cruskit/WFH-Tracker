@@ -7,9 +7,16 @@
 
 import SwiftUI
 
+struct IdentifiableDate: Identifiable, Equatable {
+    let id: Date
+    var date: Date { id }
+    init(_ date: Date) { self.id = date }
+}
+
 struct ContentView: View {
     @StateObject private var calendarManager = CalendarStateManager()
-    @State private var selectedDate: Date?
+    @State private var selectedDate: IdentifiableDate?
+    @State private var showingWorkHoursEntry = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -27,8 +34,7 @@ struct ContentView: View {
                         MultiMonthCalendarView(
                             calendarManager: calendarManager,
                             onDayTap: { date in
-                                selectedDate = date
-                                // TODO: Show entry screen for selected date
+                                selectedDate = IdentifiableDate(date)
                             }
                         )
                     }
@@ -52,6 +58,19 @@ struct ContentView: View {
             .padding(.bottom, 20)
         }
         .background(Color(.systemBackground))
+        .sheet(item: $selectedDate) { identifiableDate in
+            WorkHoursEntryView(
+                date: identifiableDate.date,
+                existingWorkDay: calendarManager.getWorkDay(for: identifiableDate.date),
+                onSave: { workDay in
+                    calendarManager.updateWorkDay(workDay)
+                    selectedDate = nil
+                },
+                onCancel: {
+                    selectedDate = nil
+                }
+            )
+        }
     }
 }
 
