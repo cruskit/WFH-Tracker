@@ -53,23 +53,21 @@ struct WorkHoursEntryView: View {
                     .foregroundColor(.secondary)
                     .frame(width: 80, alignment: .leading)
                 
-                HStack(spacing: 40) {
-                    Text("Home")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.secondary)
-                        .frame(width: 120, alignment: .center)
-                    
-                    Text("Office")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.secondary)
-                        .frame(width: 120, alignment: .center)
-                }
+                Text("Home")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+                    .frame(width: 120, alignment: .center)
+                
+                Text("Office")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+                    .frame(width: 120, alignment: .center)
                 
                 Spacer()
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 36)
             .padding(.bottom, 8)
             
             // Table Rows
@@ -96,7 +94,7 @@ struct WorkHoursEntryView: View {
                         )
                     }
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 36)
             }
             
             Spacer()
@@ -286,7 +284,6 @@ struct TableRow: View {
                 .frame(width: 120)
             }
             .padding(.vertical, 12)
-            .padding(.horizontal, 16)
             .background(Color(.systemBackground))
             
             if !isLast {
