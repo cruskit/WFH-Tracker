@@ -16,11 +16,6 @@ struct CalendarStateManagerTests {
         let testDate = calendar.date(from: DateComponents(year: 2025, month: 1, day: 15))!
         let manager = await CalendarStateManager(initialDate: testDate)
         
-        // Wait for isLoading to become false
-        while await manager.isLoading {
-            try await Task.sleep(nanoseconds: 50_000_000) // 50ms
-        }
-        
         #expect(await manager.currentMonth.month == 1)
         #expect(await manager.currentMonth.year == 2025)
         #expect(await manager.visibleMonths.count == 3)

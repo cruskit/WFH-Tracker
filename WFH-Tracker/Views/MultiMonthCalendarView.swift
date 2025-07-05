@@ -6,11 +6,26 @@ struct MultiMonthCalendarView: View {
     
     @State private var currentPageIndex: Int = 1 // Start at current month (middle)
     
+    private let calendar = Calendar.current
+    
+    private var dayHeaders: [String] {
+        let weekdaySymbols = calendar.weekdaySymbols
+        let firstWeekday = calendar.firstWeekday
+        
+        // Create array starting from the first day of the week
+        var headers: [String] = []
+        for i in 0..<7 {
+            let index = (firstWeekday - 1 + i) % 7
+            headers.append(String(weekdaySymbols[index].prefix(3)))
+        }
+        return headers
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             // Day headers
             HStack(spacing: 0) {
-                ForEach(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], id: \.self) { dayName in
+                ForEach(dayHeaders, id: \.self) { dayName in
                     Text(dayName)
                         .font(.caption)
                         .fontWeight(.medium)
