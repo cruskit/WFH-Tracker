@@ -18,15 +18,25 @@ struct DayCell: View {
                 if let workDay = workDay, workDay.hasData {
                     VStack(spacing: 1) {
                         if let homeHours = workDay.homeHours, homeHours > 0 {
-                            Text("H: \(String(format: "%.1f", homeHours))")
-                                .font(.system(size: 10))
-                                .foregroundColor(.green)
+                            HStack(spacing: 2) {
+                                Image(systemName: "house.fill")
+                                    .font(.system(size: 8))
+                                    .foregroundColor(.green)
+                                Text(String(format: "%.1f", homeHours))
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.green)
+                            }
                         }
                         
                         if let officeHours = workDay.officeHours, officeHours > 0 {
-                            Text("O: \(String(format: "%.1f", officeHours))")
-                                .font(.system(size: 10))
-                                .foregroundColor(.blue)
+                            HStack(spacing: 2) {
+                                Image(systemName: "building.2.fill")
+                                    .font(.system(size: 8))
+                                    .foregroundColor(.blue)
+                                Text(String(format: "%.1f", officeHours))
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.blue)
+                            }
                         }
                     }
                 }
