@@ -62,16 +62,12 @@ struct ContentView: View {
             // Calendar View
             ScrollView {
                 VStack(spacing: 16) {
-                    if calendarManager.isLoading {
-                        LoadingView()
-                    } else {
-                        MultiMonthCalendarView(
-                            calendarManager: calendarManager,
-                            onDayTap: { date in
-                                selectedDate = IdentifiableDate(date)
-                            }
-                        )
-                    }
+                    MultiMonthCalendarView(
+                        calendarManager: calendarManager,
+                        onDayTap: { date in
+                            selectedDate = IdentifiableDate(date)
+                        }
+                    )
                 }
                 .padding(.top, 16)
             }
@@ -114,19 +110,7 @@ struct ContentView: View {
     }
 }
 
-struct LoadingView: View {
-    var body: some View {
-        VStack(spacing: 12) {
-            ProgressView()
-                .scaleEffect(1.2)
-            
-            Text("Loading calendar data...")
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-        .frame(height: 200)
-    }
-}
+
 
 #Preview {
     ContentView()

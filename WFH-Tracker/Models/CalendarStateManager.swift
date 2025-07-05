@@ -6,7 +6,6 @@ class CalendarStateManager: ObservableObject {
     @Published var currentMonth: CalendarMonth
     @Published var visibleMonths: [CalendarMonth]
     @Published var workDays: [WorkDay]
-    @Published var isLoading: Bool = false
     
     private let calendar = Calendar.current
     private var hasInitializedData = false
@@ -50,56 +49,34 @@ class CalendarStateManager: ObservableObject {
     // MARK: - Data Loading
     
     private func loadWorkData() {
-        // Only generate sample data once during initialization
+        // Initialize with empty data - no dummy data generation
         if hasInitializedData {
             return
         }
         
-        isLoading = true
-        
-        // Load data for visible months
-        let startDate = visibleMonths.first?.date ?? currentMonth.date
-        let endDate = visibleMonths.last?.date ?? currentMonth.date
-        
-        // For now, generate sample data
-        // In a real app, this would fetch from a data source
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            self.generateSampleData(for: startDate, to: endDate)
-            self.isLoading = false
-            self.hasInitializedData = true
+        hasInitializedData = true
+        loadPersistedData()
+    }
+    
+    // MARK: - Data Persistence
+    
+    private func loadPersistedData() {
+        if let data = UserDefaults.standard.data(forKey: "workDays"),
+           let decodedWorkDays = try? JSONDecoder().decode([WorkDay].self, from: data) {
+            workDays = decodedWorkDays
+        } else {
+            // If loading fails, start with empty array
+            workDays = []
         }
     }
     
-    private func generateSampleData(for startDate: Date, to endDate: Date) {
-        var newWorkDays: [WorkDay] = []
-        let calendar = Calendar.current
-        
-        var currentDate = startDate
-        while currentDate <= endDate {
-            let isWeekend = calendar.component(.weekday, from: currentDate) == 1 || 
-                           calendar.component(.weekday, from: currentDate) == 7
-            
-            if !isWeekend && Bool.random() {
-                let homeHours = Double.random(in: 4...8)
-                let officeHours = Double.random(in: 0...4)
-                
-                newWorkDays.append(WorkDay(
-                    date: currentDate,
-                    homeHours: homeHours,
-                    officeHours: officeHours > 0 ? officeHours : nil
-                ))
-            }
-            
-            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
+    private func savePersistedData() {
+        do {
+            let encodedData = try JSONEncoder().encode(workDays)
+            UserDefaults.standard.set(encodedData, forKey: "workDays")
+        } catch {
+            print("Failed to save work days data: \(error)")
         }
-        
-        // Merge with existing data, avoiding duplicates
-        let existingDates = Set(workDays.map { calendar.startOfDay(for: $0.date) })
-        let newUniqueWorkDays = newWorkDays.filter { workDay in
-            !existingDates.contains(calendar.startOfDay(for: workDay.date))
-        }
-        
-        workDays.append(contentsOf: newUniqueWorkDays)
     }
     
     // MARK: - Work Day Management
@@ -126,6 +103,19 @@ class CalendarStateManager: ObservableObject {
         } else {
             workDays.append(workDay)
         }
+        savePersistedData()
+    }
+    
+    func deleteWorkDay(for date: Date) {
+        workDays.removeAll { workDay in
+            calendar.isDate(workDay.date, inSameDayAs: date)
+        }
+        savePersistedData()
+    }
+    
+    func clearAllData() {
+        workDays.removeAll()
+        savePersistedData()
     }
     
     // MARK: - Totals Calculation

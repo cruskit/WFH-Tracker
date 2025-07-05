@@ -24,8 +24,7 @@ struct CalendarStateManagerTests {
         #expect(await manager.currentMonth.month == 1)
         #expect(await manager.currentMonth.year == 2025)
         #expect(await manager.visibleMonths.count == 3)
-        #expect(await manager.workDays.isEmpty == false) // sample data is generated
-        #expect(await manager.isLoading == false)
+        #expect(await manager.workDays.isEmpty == true) // no sample data generated
     }
     
     @Test func testVisibleMonthsStructure() async throws {
@@ -218,5 +217,33 @@ struct CalendarStateManagerTests {
         
         #expect(await manager.currentMonth.month == 12)
         #expect(await manager.currentMonth.year == 2024)
+    }
+    
+    @Test func testDataPersistence() async throws {
+        let calendar = Calendar.current
+        let testDate = calendar.date(from: DateComponents(year: 2025, month: 1, day: 15))!
+        
+        // Create first manager and add data
+        let manager1 = await CalendarStateManager(initialDate: testDate)
+        let workDay = WorkDay(date: testDate, homeHours: 8.0, officeHours: 2.0)
+        await manager1.updateWorkDay(workDay)
+        
+        #expect(await manager1.workDays.count == 1)
+        #expect(await manager1.workDays.first?.homeHours == 8.0)
+        
+        // Create second manager (simulating app restart) and verify data is loaded
+        let manager2 = await CalendarStateManager(initialDate: testDate)
+        
+        #expect(await manager2.workDays.count == 1)
+        #expect(await manager2.workDays.first?.homeHours == 8.0)
+        #expect(await manager2.workDays.first?.officeHours == 2.0)
+        
+        // Test clearing data
+        await manager2.clearAllData()
+        #expect(await manager2.workDays.isEmpty == true)
+        
+        // Verify data is cleared in a new manager instance
+        let manager3 = await CalendarStateManager(initialDate: testDate)
+        #expect(await manager3.workDays.isEmpty == true)
     }
 } 
