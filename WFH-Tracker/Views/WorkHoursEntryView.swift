@@ -22,7 +22,7 @@ struct WorkHoursEntryView: View {
         VStack(spacing: 24) {
             // Date Header
             VStack(spacing: 8) {
-                Text("Work Hours Entry")
+                Text("Working Location Hours")
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.primary)
@@ -51,18 +51,10 @@ struct WorkHoursEntryView: View {
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                                 .frame(maxWidth: .infinity)
                             
-                            // Quick increment buttons
-                            VStack(spacing: 4) {
-                                Button("+0.5") {
-                                    incrementHours(for: &homeHours, by: 0.5)
-                                }
-                                .buttonStyle(QuickButtonStyle())
-                                
-                                Button("+1.0") {
-                                    incrementHours(for: &homeHours, by: 1.0)
-                                }
-                                .buttonStyle(QuickButtonStyle())
+                            Button("8") {
+                                homeHours = "8.0"
                             }
+                            .buttonStyle(QuickButtonStyle())
                         }
                     }
                     
@@ -82,18 +74,10 @@ struct WorkHoursEntryView: View {
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                                 .frame(maxWidth: .infinity)
                             
-                            // Quick increment buttons
-                            VStack(spacing: 4) {
-                                Button("+0.5") {
-                                    incrementHours(for: &officeHours, by: 0.5)
-                                }
-                                .buttonStyle(QuickButtonStyle())
-                                
-                                Button("+1.0") {
-                                    incrementHours(for: &officeHours, by: 1.0)
-                                }
-                                .buttonStyle(QuickButtonStyle())
+                            Button("8") {
+                                officeHours = "8.0"
                             }
+                            .buttonStyle(QuickButtonStyle())
                         }
                     }
                 }
@@ -237,12 +221,12 @@ struct SecondaryButtonStyle: ButtonStyle {
 struct QuickButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.caption)
+            .font(.headline)
             .fontWeight(.medium)
             .foregroundColor(.blue)
-            .frame(width: 40, height: 24)
+            .frame(width: 60, height: 44)
             .background(
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: 8)
                     .fill(Color.blue.opacity(0.1))
                     .opacity(configuration.isPressed ? 0.8 : 1.0)
             )
