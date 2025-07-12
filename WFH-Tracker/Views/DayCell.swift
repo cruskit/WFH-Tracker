@@ -11,33 +11,32 @@ struct DayCell: View {
     var body: some View {
         Button(action: onTap) {
             VStack(spacing: 2) {
+                // Date header (always at the top)
                 Text("\(calendar.component(.day, from: date))")
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(isCurrentMonth ? .primary : .secondary)
                 
-                VStack(spacing: 1) {
-                    HStack(spacing: 2) {
-                        Image(systemName: "house.fill")
-                            .font(.system(size: 8))
-                            .foregroundColor(.green)
-                            .opacity(hasHomeHours ? 1.0 : 0.0)
-                        Text(homeHoursText)
-                            .font(.system(size: 10))
-                            .foregroundColor(.green)
-                            .opacity(hasHomeHours ? 1.0 : 0.0)
-                    }
-                    
-                    HStack(spacing: 2) {
-                        Image(systemName: "building.2.fill")
-                            .font(.system(size: 8))
-                            .foregroundColor(.blue)
-                            .opacity(hasOfficeHours ? 1.0 : 0.0)
-                        Text(officeHoursText)
-                            .font(.system(size: 10))
-                            .foregroundColor(.blue)
-                            .opacity(hasOfficeHours ? 1.0 : 0.0)
+                // Work location emojis (if any)
+                if let workDay = workDay, workDay.hasData {
+                    if hasHomeHours && hasOfficeHours {
+                        ZStack {
+                            Text("🏠")
+                                .font(.system(size: 13))
+                                .position(x: 15, y: 10)
+                            Text("🏢")
+                                .font(.system(size: 13))
+                                .position(x: 30, y: 20)
+                        }
+                        .frame(width: 50, height: 24)
+                    } else if hasHomeHours {
+                        Text("🏠")
+                            .font(.system(size: 20))
+                    } else if hasOfficeHours {
+                        Text("🏢")
+                            .font(.system(size: 20))
                     }
                 }
+                Spacer() // Always push content to the top
             }
             .frame(width: 50, height: 60)
             .background(
@@ -58,20 +57,6 @@ struct DayCell: View {
         guard let workDay = workDay, workDay.hasData else { return false }
         return workDay.officeHours != nil && workDay.officeHours! > 0
     }
-    
-    private var homeHoursText: String {
-        guard let workDay = workDay, let homeHours = workDay.homeHours, homeHours > 0 else {
-            return "0"
-        }
-        return String(Int(round(homeHours)))
-    }
-    
-    private var officeHoursText: String {
-        guard let workDay = workDay, let officeHours = workDay.officeHours, officeHours > 0 else {
-            return "0"
-        }
-        return String(Int(round(officeHours)))
-    }
 }
 
 #Preview {
@@ -79,6 +64,20 @@ struct DayCell: View {
         DayCell(
             date: Date(),
             workDay: WorkDay(date: Date(), homeHours: 4.5, officeHours: 3.0),
+            isCurrentMonth: true,
+            onTap: {}
+        )
+        
+        DayCell(
+            date: Date(),
+            workDay: WorkDay(date: Date(), homeHours: 8.0, officeHours: 0.0),
+            isCurrentMonth: true,
+            onTap: {}
+        )
+        
+        DayCell(
+            date: Date(),
+            workDay: WorkDay(date: Date(), homeHours: 0.0, officeHours: 8.0),
             isCurrentMonth: true,
             onTap: {}
         )
