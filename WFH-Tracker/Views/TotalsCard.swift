@@ -16,18 +16,22 @@ struct TotalsCard: View {
                     Text("Home:")
                         .foregroundColor(.secondary)
                     Spacer()
-                    Text(String(format: "%.0fh (%dd)", totals.homeHours, Int(round(totals.homeHours / 8.0))))
+                    Text("\(Int(round(totals.homeHours / 8.0)))d")
                         .fontWeight(.medium)
-                        .foregroundColor(.green)
+                    + Text(" (\(String(format: "%.0fh", totals.homeHours)))")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
                 
                 HStack {
                     Text("Office:")
                         .foregroundColor(.secondary)
                     Spacer()
-                    Text(String(format: "%.0fh (%dd)", totals.officeHours, Int(round(totals.officeHours / 8.0))))
+                    Text("\(Int(round(totals.officeHours / 8.0)))d")
                         .fontWeight(.medium)
-                        .foregroundColor(.blue)
+                    + Text(" (\(String(format: "%.0fh", totals.officeHours)))")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
             }
         }
