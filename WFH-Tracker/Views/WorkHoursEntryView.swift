@@ -107,6 +107,11 @@ struct WorkHoursEntryView: View {
                 .buttonStyle(PrimaryButtonStyle())
                 .disabled(!isValidInput)
                 
+                Button("Clear All") {
+                    weeklyHours.removeAll()
+                }
+                .buttonStyle(ClearButtonStyle())
+                
                 Button("Cancel") {
                     onCancel()
                 }
@@ -198,6 +203,15 @@ struct WorkHoursEntryView: View {
                     date: weekDate,
                     homeHours: homeHoursValue,
                     officeHours: officeHoursValue
+                )
+                
+                workDaysToSave.append(workDay)
+            } else {
+                // Explicitly include cleared days with nil values
+                let workDay = WorkDay(
+                    date: weekDate,
+                    homeHours: nil,
+                    officeHours: nil
                 )
                 
                 workDaysToSave.append(workDay)
@@ -335,6 +349,21 @@ struct SecondaryButtonStyle: ButtonStyle {
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(Color.blue, lineWidth: 2)
+                    .opacity(configuration.isPressed ? 0.8 : 1.0)
+            )
+    }
+}
+
+struct ClearButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headline)
+            .foregroundColor(.red)
+            .frame(maxWidth: .infinity)
+            .frame(height: 50)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.red, lineWidth: 2)
                     .opacity(configuration.isPressed ? 0.8 : 1.0)
             )
     }

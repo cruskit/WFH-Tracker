@@ -61,16 +61,16 @@ struct DayCell: View {
     
     private var homeHoursText: String {
         guard let workDay = workDay, let homeHours = workDay.homeHours, homeHours > 0 else {
-            return "0.0"
+            return "0"
         }
-        return String(format: "%.1f", homeHours)
+        return String(Int(round(homeHours)))
     }
     
     private var officeHoursText: String {
         guard let workDay = workDay, let officeHours = workDay.officeHours, officeHours > 0 else {
-            return "0.0"
+            return "0"
         }
-        return String(format: "%.1f", officeHours)
+        return String(Int(round(officeHours)))
     }
 }
 
