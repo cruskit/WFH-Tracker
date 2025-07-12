@@ -1,5 +1,5 @@
 //
-//  SettingsView.swift
+//  ExportView.swift
 //  WFH-Tracker
 //
 //  Created by Paul Ruskin on 29/6/2025.
@@ -7,18 +7,18 @@
 
 import SwiftUI
 
-struct SettingsView: View {
+struct ExportView: View {
     var body: some View {
         VStack(spacing: 20) {
-            Image(systemName: "gearshape.fill")
+            Image(systemName: "square.and.arrow.up")
                 .font(.system(size: 60))
-                .foregroundColor(.gray)
+                .foregroundColor(.green)
             
-            Text("Settings")
+            Text("Export")
                 .font(.largeTitle)
                 .fontWeight(.bold)
             
-            Text("App settings and preferences will be displayed here")
+            Text("Export your work hours data to various formats")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -32,5 +32,5 @@ struct SettingsView: View {
 }
 
 #Preview {
-    SettingsView()
+    ExportView()
 } 

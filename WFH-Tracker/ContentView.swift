@@ -22,10 +22,10 @@ struct ContentView: View {
                     Text("Trends")
                 }
             
-            SettingsView()
+            ExportView()
                 .tabItem {
-                    Image(systemName: "gearshape.fill")
-                    Text("Settings")
+                    Image(systemName: "square.and.arrow.up")
+                    Text("Export")
                 }
         }
     }
