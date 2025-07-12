@@ -53,13 +53,13 @@ struct WorkHoursEntryView: View {
                     .foregroundColor(.secondary)
                     .frame(width: 80, alignment: .leading)
                 
-                Text("Home")
+                Text("🏡 Home")
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(.secondary)
                     .frame(width: 120, alignment: .center)
                 
-                Text("Office")
+                Text("🏢 Office")
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(.secondary)
