@@ -85,10 +85,10 @@ struct WorkHoursEntryView: View {
                                 weeklyHours[date] = (home: weeklyHours[date]?.home ?? "", office: newValue)
                             },
                             onQuickHome8: {
-                                weeklyHours[date] = (home: "8.0", office: weeklyHours[date]?.office ?? "")
+                                weeklyHours[date] = (home: "8", office: weeklyHours[date]?.office ?? "")
                             },
                             onQuickOffice8: {
-                                weeklyHours[date] = (home: weeklyHours[date]?.home ?? "", office: "8.0")
+                                weeklyHours[date] = (home: weeklyHours[date]?.home ?? "", office: "8")
                             },
                             isLast: index == weekDates.count - 1
                         )
@@ -150,18 +150,18 @@ struct WorkHoursEntryView: View {
         return shortDateFormatter.string(from: startOfWeek)
     }
     
-    private var weeklyTotalHours: Double {
+    private var weeklyTotalHours: Int {
         weekDates.reduce(0) { total, date in
-            let home = Double(weeklyHours[date]?.home ?? "0") ?? 0
-            let office = Double(weeklyHours[date]?.office ?? "0") ?? 0
+            let home = Int(weeklyHours[date]?.home ?? "0") ?? 0
+            let office = Int(weeklyHours[date]?.office ?? "0") ?? 0
             return total + home + office
         }
     }
     
     private var isValidInput: Bool {
         for date in weekDates {
-            let home = Double(weeklyHours[date]?.home ?? "0") ?? 0
-            let office = Double(weeklyHours[date]?.office ?? "0") ?? 0
+            let home = Int(weeklyHours[date]?.home ?? "0") ?? 0
+            let office = Int(weeklyHours[date]?.office ?? "0") ?? 0
             
             if home < 0 || office < 0 || home > 24 || office > 24 || (home + office) > 24 {
                 return false
@@ -174,8 +174,8 @@ struct WorkHoursEntryView: View {
         // Load existing data for all days in the week
         for weekDate in weekDates {
             if let workDay = existingWorkDays.first(where: { calendar.isDate($0.date, inSameDayAs: weekDate) }) {
-                let homeHours = workDay.homeHours.map { String(format: "%.1f", $0) } ?? ""
-                let officeHours = workDay.officeHours.map { String(format: "%.1f", $0) } ?? ""
+                let homeHours = workDay.homeHours.map { String(Int($0)) } ?? ""
+                let officeHours = workDay.officeHours.map { String(Int($0)) } ?? ""
                 weeklyHours[weekDate] = (home: homeHours, office: officeHours)
             }
         }
@@ -192,12 +192,12 @@ struct WorkHoursEntryView: View {
         
         for weekDate in weekDates {
             if let hours = weeklyHours[weekDate] {
-                let home = Double(hours.home) ?? 0
-                let office = Double(hours.office) ?? 0
+                let home = Int(hours.home) ?? 0
+                let office = Int(hours.office) ?? 0
                 
                 // Only save if at least one value is greater than 0
-                let homeHoursValue = home > 0 ? home : nil
-                let officeHoursValue = office > 0 ? office : nil
+                let homeHoursValue = home > 0 ? Double(home) : nil
+                let officeHoursValue = office > 0 ? Double(office) : nil
                 
                 let workDay = WorkDay(
                     date: weekDate,
@@ -265,11 +265,11 @@ struct TableRow: View {
                 
                 // Home Hours Column
                 HStack(spacing: 4) {
-                    TextField("0.0", text: Binding(
+                    TextField("0", text: Binding(
                         get: { homeHours },
                         set: { onHomeHoursChange($0) }
                     ))
-                    .keyboardType(.decimalPad)
+                    .keyboardType(.numberPad)
                     .textFieldStyle(TableTextFieldStyle())
                     .frame(width: 60)
                     
@@ -282,11 +282,11 @@ struct TableRow: View {
                 
                 // Office Hours Column
                 HStack(spacing: 4) {
-                    TextField("0.0", text: Binding(
+                    TextField("0", text: Binding(
                         get: { officeHours },
                         set: { onOfficeHoursChange($0) }
                     ))
-                    .keyboardType(.decimalPad)
+                    .keyboardType(.numberPad)
                     .textFieldStyle(TableTextFieldStyle())
                     .frame(width: 60)
                     
