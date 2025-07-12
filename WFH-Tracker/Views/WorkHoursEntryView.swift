@@ -273,10 +273,10 @@ struct TableRow: View {
                     .textFieldStyle(TableTextFieldStyle())
                     .frame(width: 60)
                     
-                    Button("8") {
+                    Button("🏠") {
                         onQuickHome8()
                     }
-                    .buttonStyle(QuickButtonStyle())
+                    .buttonStyle(IconButtonStyle())
                 }
                 .frame(width: 120)
                 
@@ -290,10 +290,10 @@ struct TableRow: View {
                     .textFieldStyle(TableTextFieldStyle())
                     .frame(width: 60)
                     
-                    Button("8") {
+                    Button("🏢") {
                         onQuickOffice8()
                     }
-                    .buttonStyle(QuickButtonStyle())
+                    .buttonStyle(IconButtonStyle())
                 }
                 .frame(width: 120)
             }
@@ -369,18 +369,21 @@ struct ClearButtonStyle: ButtonStyle {
     }
 }
 
-struct QuickButtonStyle: ButtonStyle {
+struct IconButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.caption)
-            .fontWeight(.medium)
-            .foregroundColor(.blue)
-            .frame(width: 40, height: 24)
+            .font(.title3)
+            .frame(width: 32, height: 32)
             .background(
-                RoundedRectangle(cornerRadius: 4)
+                Circle()
                     .fill(Color.blue.opacity(0.1))
-                    .opacity(configuration.isPressed ? 0.8 : 1.0)
+                    .overlay(
+                        Circle()
+                            .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                    )
             )
+            .scaleEffect(configuration.isPressed ? 0.9 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 
