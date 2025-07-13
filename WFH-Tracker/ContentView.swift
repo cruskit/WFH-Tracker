@@ -8,18 +8,14 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var calendarManager = CalendarStateManager()
+    
     var body: some View {
         TabView {
-            LogView()
+            LogView(calendarManager: calendarManager)
                 .tabItem {
                     Image(systemName: "calendar")
                     Text("Log")
-                }
-            
-            TrendsView()
-                .tabItem {
-                    Image(systemName: "chart.line.uptrend.xyaxis")
-                    Text("Trends")
                 }
             
             ExportView()

@@ -14,7 +14,7 @@ struct IdentifiableDate: Identifiable, Equatable {
 }
 
 struct LogView: View {
-    @StateObject private var calendarManager = CalendarStateManager()
+    @ObservedObject var calendarManager: CalendarStateManager
     @State private var selectedDate: IdentifiableDate?
     @State private var showingWorkHoursEntry = false
     
@@ -111,5 +111,5 @@ struct LogView: View {
 }
 
 #Preview {
-    LogView()
+    LogView(calendarManager: CalendarStateManager())
 } 
