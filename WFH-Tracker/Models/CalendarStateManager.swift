@@ -134,4 +134,9 @@ class CalendarStateManager: ObservableObject {
             date: month.date
         )
     }
+    
+    var financialYears: [FinancialYear] {
+        let uniqueYears = Set(workDays.map { FinancialYear(for: $0.date) })
+        return Array(uniqueYears).sorted()
+    }
 } 
