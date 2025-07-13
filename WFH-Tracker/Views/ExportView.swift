@@ -64,10 +64,13 @@ struct ExportView: View {
     }
     
     private func generateCSVString(for year: FinancialYear) -> String {
-        var csvText = "date,home days,office days,home hours,office hours\n"
+        var csvText = "date,day of week,home days,office days,home hours,office hours\n"
         
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "dd/MM/yyyy"
+        
+        let dayFormatter = DateFormatter()
+        dayFormatter.dateFormat = "EEEE"
         
         var currentDate = year.startDate
         let calendar = Calendar.current
@@ -82,8 +85,9 @@ struct ExportView: View {
             let officeDays = round((officeHours / 8.0) * 10) / 10.0
             
             let dateString = dateFormatter.string(from: currentDate)
+            let dayString = dayFormatter.string(from: currentDate)
             
-            let row = "\(dateString),\(homeDays),\(officeDays),\(homeHours),\(officeHours)\n"
+            let row = "\(dateString),\(dayString),\(homeDays),\(officeDays),\(homeHours),\(officeHours)\n"
             csvText.append(row)
             
             currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate)!
