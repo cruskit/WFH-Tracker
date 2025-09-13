@@ -6,11 +6,15 @@ class CalendarStateManager: ObservableObject {
     @Published var currentMonth: CalendarMonth
     @Published var visibleMonths: [CalendarMonth]
     @Published var workDays: [WorkDay]
-    
+
     private let calendar = Calendar.current
     private var hasInitializedData = false
-    
-    init(initialDate: Date = Date()) {
+    private let userDefaults: UserDefaults
+    private let storageKey: String
+
+    init(initialDate: Date = Date(), userDefaults: UserDefaults = UserDefaults.standard, storageKey: String = "workDays") {
+        self.userDefaults = userDefaults
+        self.storageKey = storageKey
         let currentMonth = CalendarMonth(date: initialDate)
         self.currentMonth = currentMonth
         self.workDays = []
@@ -61,7 +65,7 @@ class CalendarStateManager: ObservableObject {
     // MARK: - Data Persistence
     
     private func loadPersistedData() {
-        if let data = UserDefaults.standard.data(forKey: "workDays"),
+        if let data = userDefaults.data(forKey: storageKey),
            let decodedWorkDays = try? JSONDecoder().decode([WorkDay].self, from: data) {
             workDays = decodedWorkDays
         } else {
@@ -69,11 +73,11 @@ class CalendarStateManager: ObservableObject {
             workDays = []
         }
     }
-    
+
     private func savePersistedData() {
         do {
             let encodedData = try JSONEncoder().encode(workDays)
-            UserDefaults.standard.set(encodedData, forKey: "workDays")
+            userDefaults.set(encodedData, forKey: storageKey)
         } catch {
             print("Failed to save work days data: \(error)")
         }
@@ -95,7 +99,7 @@ class CalendarStateManager: ObservableObject {
         }
     }
     
-    func updateWorkDay(_ workDay: WorkDay) {
+    func updateWorkDay(_ workDay: WorkDay) async {
         if let index = workDays.firstIndex(where: { day in
             calendar.isDate(day.date, inSameDayAs: workDay.date)
         }) {
@@ -113,7 +117,7 @@ class CalendarStateManager: ObservableObject {
         savePersistedData()
     }
     
-    func clearAllData() {
+    func clearAllData() async {
         workDays.removeAll()
         savePersistedData()
     }

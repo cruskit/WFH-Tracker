@@ -14,18 +14,23 @@ struct CalendarStateManagerTests {
     @Test func testCalendarStateManagerInitialization() async throws {
         let calendar = Calendar.current
         let testDate = calendar.date(from: DateComponents(year: 2025, month: 1, day: 15))!
-        let manager = await CalendarStateManager(initialDate: testDate)
-        
+        let testStorageKey = "testInit_\(UUID().uuidString)"
+        let manager = await CalendarStateManager(initialDate: testDate, storageKey: testStorageKey)
+
         #expect(await manager.currentMonth.month == 1)
         #expect(await manager.currentMonth.year == 2025)
         #expect(await manager.visibleMonths.count == 3)
         #expect(await manager.workDays.isEmpty == true) // no sample data generated
+
+        // Clean up
+        UserDefaults.standard.removeObject(forKey: testStorageKey)
     }
     
     @Test func testVisibleMonthsStructure() async throws {
         let calendar = Calendar.current
         let testDate = calendar.date(from: DateComponents(year: 2025, month: 1, day: 15))!
-        let manager = await CalendarStateManager(initialDate: testDate)
+        let testStorageKey = "testVisibleMonths_\(UUID().uuidString)"
+        let manager = await CalendarStateManager(initialDate: testDate, storageKey: testStorageKey)
         
         // Should have previous, current, and next month
         let previousMonth = await manager.visibleMonths[0]
@@ -38,12 +43,16 @@ struct CalendarStateManagerTests {
         #expect(currentMonth.year == 2025)
         #expect(nextMonth.month == 2)
         #expect(nextMonth.year == 2025)
+
+        // Clean up
+        UserDefaults.standard.removeObject(forKey: testStorageKey)
     }
     
     @Test func testNextMonthNavigation() async throws {
         let calendar = Calendar.current
         let testDate = calendar.date(from: DateComponents(year: 2025, month: 1, day: 15))!
-        let manager = await CalendarStateManager(initialDate: testDate)
+        let testStorageKey = "testNextMonth_\(UUID().uuidString)"
+        let manager = await CalendarStateManager(initialDate: testDate, storageKey: testStorageKey)
         
         await manager.nextMonth()
         
@@ -61,12 +70,16 @@ struct CalendarStateManagerTests {
         #expect(currentMonth.year == 2025)
         #expect(nextMonth.month == 3)
         #expect(nextMonth.year == 2025)
+
+        // Clean up
+        UserDefaults.standard.removeObject(forKey: testStorageKey)
     }
     
     @Test func testPreviousMonthNavigation() async throws {
         let calendar = Calendar.current
         let testDate = calendar.date(from: DateComponents(year: 2025, month: 1, day: 15))!
-        let manager = await CalendarStateManager(initialDate: testDate)
+        let testStorageKey = "testPreviousMonth_\(UUID().uuidString)"
+        let manager = await CalendarStateManager(initialDate: testDate, storageKey: testStorageKey)
         
         await manager.previousMonth()
         
@@ -84,12 +97,16 @@ struct CalendarStateManagerTests {
         #expect(currentMonth.year == 2024)
         #expect(nextMonth.month == 1)
         #expect(nextMonth.year == 2025)
+
+        // Clean up
+        UserDefaults.standard.removeObject(forKey: testStorageKey)
     }
     
     @Test func testScrollToMonth() async throws {
         let calendar = Calendar.current
         let testDate = calendar.date(from: DateComponents(year: 2025, month: 1, day: 15))!
-        let manager = await CalendarStateManager(initialDate: testDate)
+        let testStorageKey = "testScrollToMonth_\(UUID().uuidString)"
+        let manager = await CalendarStateManager(initialDate: testDate, storageKey: testStorageKey)
         
         let targetDate = calendar.date(from: DateComponents(year: 2025, month: 6, day: 1))!
         let targetMonth = CalendarMonth(date: targetDate)
@@ -110,12 +127,16 @@ struct CalendarStateManagerTests {
         #expect(currentMonth.year == 2025)
         #expect(nextMonth.month == 7)
         #expect(nextMonth.year == 2025)
+
+        // Clean up
+        UserDefaults.standard.removeObject(forKey: testStorageKey)
     }
     
     @Test func testGetWorkDay() async throws {
         let calendar = Calendar.current
         let testDate = calendar.date(from: DateComponents(year: 2025, month: 1, day: 15))!
-        let manager = await CalendarStateManager(initialDate: testDate)
+        let testStorageKey = "testGetWorkDay_\(UUID().uuidString)"
+        let manager = await CalendarStateManager(initialDate: testDate, storageKey: testStorageKey)
         
         // Add a work day
         let workDay = WorkDay(date: testDate, homeHours: 8.0, officeHours: 2.0)
@@ -131,12 +152,16 @@ struct CalendarStateManagerTests {
         let otherDate = calendar.date(byAdding: .day, value: 1, to: testDate) ?? testDate
         let nonExistentWorkDay = await manager.getWorkDay(for: otherDate)
         #expect(nonExistentWorkDay == nil)
+
+        // Clean up
+        UserDefaults.standard.removeObject(forKey: testStorageKey)
     }
     
     @Test func testUpdateWorkDay() async throws {
         let calendar = Calendar.current
         let testDate = calendar.date(from: DateComponents(year: 2025, month: 1, day: 15))!
-        let manager = await CalendarStateManager(initialDate: testDate)
+        let testStorageKey = "testUpdateWorkDay_\(UUID().uuidString)"
+        let manager = await CalendarStateManager(initialDate: testDate, storageKey: testStorageKey)
         
         // Add initial work day
         let initialWorkDay = WorkDay(date: testDate, homeHours: 8.0, officeHours: 2.0)
@@ -157,14 +182,18 @@ struct CalendarStateManagerTests {
         let newDate = calendar.date(byAdding: .day, value: 1, to: testDate) ?? testDate
         let newWorkDay = WorkDay(date: newDate, homeHours: 7.0, officeHours: 1.0)
         await manager.updateWorkDay(newWorkDay)
-        
+
         #expect(await manager.workDays.count == 2)
+
+        // Clean up
+        UserDefaults.standard.removeObject(forKey: testStorageKey)
     }
     
     @Test func testGetMonthlyTotals() async throws {
         let calendar = Calendar.current
         let testDate = calendar.date(from: DateComponents(year: 2025, month: 1, day: 15))!
-        let manager = await CalendarStateManager(initialDate: testDate)
+        let testStorageKey = "testGetMonthlyTotals_\(UUID().uuidString)"
+        let manager = await CalendarStateManager(initialDate: testDate, storageKey: testStorageKey)
         
         // Add work days for January 2025
         let workDay1 = WorkDay(date: testDate, homeHours: 8.0, officeHours: 2.0)
@@ -173,16 +202,20 @@ struct CalendarStateManagerTests {
         await manager.updateWorkDay(workDay2)
         
         let totals = await manager.getMonthlyTotals(for: await manager.currentMonth)
-        
+
         #expect(totals.homeHours == 14.0)
         #expect(totals.officeHours == 6.0)
         #expect(totals.totalHours == 20.0)
+
+        // Clean up
+        UserDefaults.standard.removeObject(forKey: testStorageKey)
     }
     
     @Test func testGetYearlyTotals() async throws {
         let calendar = Calendar.current
         let testDate = calendar.date(from: DateComponents(year: 2025, month: 1, day: 15))!
-        let manager = await CalendarStateManager(initialDate: testDate)
+        let testStorageKey = "testGetYearlyTotals_\(UUID().uuidString)"
+        let manager = await CalendarStateManager(initialDate: testDate, storageKey: testStorageKey)
         
         // Add work days for different months in 2025
         let januaryWorkDay = WorkDay(date: testDate, homeHours: 8.0, officeHours: 2.0)
@@ -192,16 +225,20 @@ struct CalendarStateManagerTests {
         await manager.updateWorkDay(februaryWorkDay)
         
         let totals = await manager.getYearlyTotals(for: await manager.currentMonth)
-        
+
         #expect(totals.homeHours == 14.0)
         #expect(totals.officeHours == 6.0)
         #expect(totals.totalHours == 20.0)
+
+        // Clean up
+        UserDefaults.standard.removeObject(forKey: testStorageKey)
     }
     
     @Test func testYearBoundaryNavigation() async throws {
         let calendar = Calendar.current
         let decemberDate = calendar.date(from: DateComponents(year: 2024, month: 12, day: 15))!
-        let manager = await CalendarStateManager(initialDate: decemberDate)
+        let testStorageKey = "testYearBoundary_\(UUID().uuidString)"
+        let manager = await CalendarStateManager(initialDate: decemberDate, storageKey: testStorageKey)
         
         await manager.nextMonth()
         
@@ -209,36 +246,51 @@ struct CalendarStateManagerTests {
         #expect(await manager.currentMonth.year == 2025)
         
         await manager.previousMonth()
-        
+
         #expect(await manager.currentMonth.month == 12)
         #expect(await manager.currentMonth.year == 2024)
+
+        // Clean up
+        UserDefaults.standard.removeObject(forKey: testStorageKey)
     }
     
     @Test func testDataPersistence() async throws {
         let calendar = Calendar.current
         let testDate = calendar.date(from: DateComponents(year: 2025, month: 1, day: 15))!
-        
+
+        // Use a unique storage key for this test to avoid conflicts with other tests
+        let testStorageKey = "testDataPersistence_\(UUID().uuidString)"
+
         // Create first manager and add data
-        let manager1 = await CalendarStateManager(initialDate: testDate)
+        let manager1 = await CalendarStateManager(initialDate: testDate, storageKey: testStorageKey)
         let workDay = WorkDay(date: testDate, homeHours: 8.0, officeHours: 2.0)
         await manager1.updateWorkDay(workDay)
-        
+
         #expect(await manager1.workDays.count == 1)
         #expect(await manager1.workDays.first?.homeHours == 8.0)
-        
+
+        // Add a small delay to ensure data is saved
+        try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+
         // Create second manager (simulating app restart) and verify data is loaded
-        let manager2 = await CalendarStateManager(initialDate: testDate)
-        
+        let manager2 = await CalendarStateManager(initialDate: testDate, storageKey: testStorageKey)
+
         #expect(await manager2.workDays.count == 1)
         #expect(await manager2.workDays.first?.homeHours == 8.0)
         #expect(await manager2.workDays.first?.officeHours == 2.0)
-        
+
         // Test clearing data
         await manager2.clearAllData()
         #expect(await manager2.workDays.isEmpty == true)
-        
+
+        // Add a small delay to ensure data is cleared
+        try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+
         // Verify data is cleared in a new manager instance
-        let manager3 = await CalendarStateManager(initialDate: testDate)
+        let manager3 = await CalendarStateManager(initialDate: testDate, storageKey: testStorageKey)
         #expect(await manager3.workDays.isEmpty == true)
+
+        // Clean up the test data
+        UserDefaults.standard.removeObject(forKey: testStorageKey)
     }
 } 

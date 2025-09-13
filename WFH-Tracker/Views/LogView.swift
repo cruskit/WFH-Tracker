@@ -97,10 +97,12 @@ struct LogView: View {
                 existingWorkDay: calendarManager.getWorkDay(for: identifiableDate.date),
                 existingWorkDays: existingWorkDays,
                 onSave: { workDays in
-                    for workDay in workDays {
-                        calendarManager.updateWorkDay(workDay)
+                    Task {
+                        for workDay in workDays {
+                            await calendarManager.updateWorkDay(workDay)
+                        }
+                        selectedDate = nil
                     }
-                    selectedDate = nil
                 },
                 onCancel: {
                     selectedDate = nil
