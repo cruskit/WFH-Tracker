@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var calendarManager = CalendarStateManager()
+    @EnvironmentObject var appState: AppState
     @State private var selectedFinancialYear: FinancialYear?
 
     var body: some View {
@@ -25,10 +26,20 @@ struct ContentView: View {
                     Image(systemName: "square.and.arrow.up")
                     Text("Export")
                 }
+
+            SettingsView()
+                .tabItem {
+                    Image(systemName: "gear")
+                    Text("Settings")
+                }
         }
         .onAppear(perform: setupInitialFinancialYear)
         .onChange(of: calendarManager.financialYears) { _ in
             setupInitialFinancialYear()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("OpenCurrentWeekEntry"))) { _ in
+            // Trigger app state to open current week entry
+            appState.openCurrentWeekEntry()
         }
     }
 
@@ -37,6 +48,7 @@ struct ContentView: View {
             selectedFinancialYear = calendarManager.financialYears.first
         }
     }
+
 }
 
 #Preview {

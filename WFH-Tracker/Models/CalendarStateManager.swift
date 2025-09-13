@@ -143,4 +143,44 @@ class CalendarStateManager: ObservableObject {
         let uniqueYears = Set(workDays.map { FinancialYear(for: $0.date) })
         return Array(uniqueYears).sorted()
     }
+
+    // MARK: - Week Hours Checking
+
+    func hasLoggedHoursForCurrentWeek() -> Bool {
+        let calendar = Calendar.current
+        let now = Date()
+
+        guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: now) else {
+            return false
+        }
+
+        let weekWorkDays = workDays.filter { workDay in
+            weekInterval.contains(workDay.date)
+        }
+
+        // Check if any work day has logged hours
+        return weekWorkDays.contains { workDay in
+            (workDay.homeHours ?? 0) > 0 || (workDay.officeHours ?? 0) > 0
+        }
+    }
+
+    func hasLoggedHoursForWeek(containing date: Date) -> Bool {
+        let calendar = Calendar.current
+
+        guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: date) else {
+            return false
+        }
+
+        let weekWorkDays = workDays.filter { workDay in
+            weekInterval.contains(workDay.date)
+        }
+
+        return weekWorkDays.contains { workDay in
+            (workDay.homeHours ?? 0) > 0 || (workDay.officeHours ?? 0) > 0
+        }
+    }
+
+    func getWeekInterval(for date: Date) -> DateInterval? {
+        return calendar.dateInterval(of: .weekOfYear, for: date)
+    }
 } 

@@ -15,6 +15,7 @@ struct IdentifiableDate: Identifiable, Equatable {
 
 struct LogView: View {
     @ObservedObject var calendarManager: CalendarStateManager
+    @EnvironmentObject var appState: AppState
     @State private var selectedDate: IdentifiableDate?
     @State private var showingWorkHoursEntry = false
     
@@ -88,6 +89,13 @@ struct LogView: View {
             .padding(.bottom, 20)
         }
         .background(Color(.systemBackground))
+        .onChange(of: appState.shouldShowCurrentWeekEntry) { shouldShow in
+            if shouldShow {
+                // Open current week entry
+                selectedDate = IdentifiableDate(Date())
+                appState.resetNotificationState()
+            }
+        }
         .sheet(item: $selectedDate) { identifiableDate in
             let weekDates = getWeekDates(for: identifiableDate.date)
             let existingWorkDays = calendarManager.getWorkDays(for: weekDates)
