@@ -16,6 +16,7 @@ struct IdentifiableDate: Identifiable, Equatable {
 struct LogView: View {
     @ObservedObject var calendarManager: CalendarStateManager
     @EnvironmentObject var appState: AppState
+    @ObservedObject private var settingsManager = SettingsManager.shared
     @State private var selectedDate: IdentifiableDate?
     @State private var showingWorkHoursEntry = false
     
@@ -43,13 +44,15 @@ struct LogView: View {
         let calendar = Calendar.current
         let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: date)?.start ?? date
         var dates: [Date] = []
-        
+
         for i in 0..<7 {
             if let weekDate = calendar.date(byAdding: .day, value: i, to: startOfWeek) {
+                // Always include all days in the sheet - the user might want to edit weekend data
+                // even if they don't display weekends in the main calendar view
                 dates.append(weekDate)
             }
         }
-        
+
         return dates
     }
     
@@ -65,6 +68,7 @@ struct LogView: View {
                 VStack(spacing: 16) {
                     MultiMonthCalendarView(
                         calendarManager: calendarManager,
+                        displayWeekends: settingsManager.notificationSettings.displayWeekends,
                         onDayTap: { date in
                             selectedDate = IdentifiableDate(date)
                         }

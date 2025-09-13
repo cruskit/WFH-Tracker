@@ -3,6 +3,8 @@ import UserNotifications
 
 @MainActor
 class SettingsManager: ObservableObject {
+    static let shared = SettingsManager()
+
     @Published var notificationSettings: NotificationSettings {
         didSet {
             saveSettings()
@@ -77,6 +79,10 @@ class SettingsManager: ObservableObject {
     func updateNotificationTime(hour: Int, minute: Int) {
         notificationSettings.hour = hour
         notificationSettings.minute = minute
+    }
+
+    func updateDisplayWeekends(_ displayWeekends: Bool) {
+        notificationSettings.displayWeekends = displayWeekends
     }
 
     func resetToDefaults() {

@@ -2,23 +2,33 @@ import SwiftUI
 
 struct MultiMonthCalendarView: View {
     @ObservedObject var calendarManager: CalendarStateManager
+    let displayWeekends: Bool
     let onDayTap: (Date) -> Void
-    
+
     @State private var currentPageIndex: Int = 1 // Start at current month (middle)
     
     private let calendar = Calendar.current
     
     private var dayHeaders: [String] {
-        let weekdaySymbols = calendar.weekdaySymbols
-        let firstWeekday = calendar.firstWeekday
-        
-        // Create array starting from the first day of the week
-        var headers: [String] = []
-        for i in 0..<7 {
-            let index = (firstWeekday - 1 + i) % 7
-            headers.append(String(weekdaySymbols[index].prefix(3)))
+        if displayWeekends {
+            // Show all 7 days
+            let weekdaySymbols = calendar.weekdaySymbols
+            let firstWeekday = calendar.firstWeekday
+
+            var headers: [String] = []
+            for i in 0..<7 {
+                let index = (firstWeekday - 1 + i) % 7
+                headers.append(String(weekdaySymbols[index].prefix(3)))
+            }
+            return headers
+        } else {
+            // Show only Monday through Friday
+            return ["Mon", "Tue", "Wed", "Thu", "Fri"]
         }
-        return headers
+    }
+
+    private var dayWidth: CGFloat {
+        displayWeekends ? 50 : 70
     }
     
     var body: some View {
@@ -30,7 +40,7 @@ struct MultiMonthCalendarView: View {
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
-                        .frame(width: 50, height: 30)
+                        .frame(width: dayWidth, height: 30)
                 }
             }
             .padding(.horizontal, 20)
@@ -41,6 +51,7 @@ struct MultiMonthCalendarView: View {
                     CalendarView(
                         calendarMonth: month,
                         workDays: calendarManager.workDays,
+                        displayWeekends: displayWeekends,
                         onDayTap: onDayTap
                     )
                     .tag(index)
@@ -70,9 +81,10 @@ struct MultiMonthCalendarView: View {
 
 #Preview {
     let calendarManager = CalendarStateManager()
-    
+
     MultiMonthCalendarView(
         calendarManager: calendarManager,
+        displayWeekends: true,
         onDayTap: { _ in }
     )
 } 

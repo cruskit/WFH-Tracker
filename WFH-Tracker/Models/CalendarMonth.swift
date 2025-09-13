@@ -44,7 +44,16 @@ struct CalendarMonth {
         
         return weeks
     }
-    
+
+    func weekdaysOnly(from weeks: [[Date]]) -> [[Date]] {
+        return weeks.map { week in
+            week.filter { date in
+                let weekday = calendar.component(.weekday, from: date)
+                return weekday != 1 && weekday != 7 // Exclude Sunday (1) and Saturday (7)
+            }
+        }
+    }
+
     func nextMonth() -> CalendarMonth {
         let nextDate = calendar.date(byAdding: .month, value: 1, to: date) ?? date
         return CalendarMonth(date: nextDate)

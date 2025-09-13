@@ -2,7 +2,7 @@ import SwiftUI
 import UserNotifications
 
 struct SettingsView: View {
-    @StateObject private var settingsManager = SettingsManager()
+    @ObservedObject private var settingsManager = SettingsManager.shared
     @State private var showingPermissionAlert = false
     @State private var permissionStatus: UNAuthorizationStatus = .notDetermined
 
@@ -11,6 +11,30 @@ struct SettingsView: View {
     var body: some View {
         NavigationView {
             Form {
+                // Calendar Display Section
+                Section {
+                    HStack {
+                        Image(systemName: "calendar")
+                            .foregroundColor(.blue)
+                            .frame(width: 24)
+
+                        Text("Display weekends")
+                            .font(.body)
+
+                        Spacer()
+
+                        Toggle("", isOn: Binding(
+                            get: { settingsManager.notificationSettings.displayWeekends },
+                            set: { settingsManager.updateDisplayWeekends($0) }
+                        ))
+                    }
+                    .padding(.vertical, 4)
+                } header: {
+                    Text("Calendar Display")
+                } footer: {
+                    Text("Show Saturday and Sunday in the calendar view. When disabled, only Monday through Friday are displayed.")
+                }
+
                 // Notifications Section
                 Section {
                     VStack(alignment: .leading, spacing: 8) {

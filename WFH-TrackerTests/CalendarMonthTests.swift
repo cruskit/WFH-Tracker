@@ -118,8 +118,56 @@ struct CalendarMonthTests {
         let calendarMonth = CalendarMonth()
         let currentDate = Date()
         let calendar = Calendar.current
-        
+
         #expect(calendarMonth.month == calendar.component(.month, from: currentDate))
         #expect(calendarMonth.year == calendar.component(.year, from: currentDate))
+    }
+
+    @Test func testWeekdaysOnlyFiltering() async throws {
+        let calendar = Calendar.current
+        let testDate = calendar.date(from: DateComponents(year: 2025, month: 1, day: 15))!
+        let calendarMonth = CalendarMonth(date: testDate)
+
+        let allWeeks = calendarMonth.weeks
+        let weekdaysOnlyWeeks = calendarMonth.weekdaysOnly(from: allWeeks)
+
+        // Should still have 6 weeks
+        #expect(weekdaysOnlyWeeks.count == 6)
+
+        // Each week should now have only 5 days (Monday-Friday)
+        for week in weekdaysOnlyWeeks {
+            #expect(week.count == 5)
+
+            // Verify no weekends in the filtered weeks
+            for date in week {
+                let weekday = calendar.component(.weekday, from: date)
+                #expect(weekday != 1) // Not Sunday
+                #expect(weekday != 7) // Not Saturday
+                #expect(weekday >= 2 && weekday <= 6) // Monday through Friday
+            }
+        }
+    }
+
+    @Test func testWeekdaysOnlyPreservesOrder() async throws {
+        let calendar = Calendar.current
+        let testDate = calendar.date(from: DateComponents(year: 2025, month: 1, day: 15))!
+        let calendarMonth = CalendarMonth(date: testDate)
+
+        let allWeeks = calendarMonth.weeks
+        let weekdaysOnlyWeeks = calendarMonth.weekdaysOnly(from: allWeeks)
+
+        // Check that the first week starts with Monday (weekday 2) when available
+        let firstWeek = weekdaysOnlyWeeks[0]
+        if !firstWeek.isEmpty {
+            let firstDayWeekday = calendar.component(.weekday, from: firstWeek[0])
+            #expect(firstDayWeekday >= 2 && firstDayWeekday <= 6) // Weekday
+
+            // Check consecutive weekdays in the first week
+            for i in 1..<firstWeek.count {
+                let currentWeekday = calendar.component(.weekday, from: firstWeek[i])
+                let previousWeekday = calendar.component(.weekday, from: firstWeek[i-1])
+                #expect(currentWeekday == previousWeekday + 1)
+            }
+        }
     }
 } 

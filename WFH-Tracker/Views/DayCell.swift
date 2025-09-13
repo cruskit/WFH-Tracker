@@ -4,9 +4,14 @@ struct DayCell: View {
     let date: Date
     let workDay: WorkDay?
     let isCurrentMonth: Bool
+    let displayWeekends: Bool
     let onTap: () -> Void
-    
+
     private let calendar = Calendar.current
+
+    private var cellWidth: CGFloat {
+        displayWeekends ? 50 : 70
+    }
     
     var body: some View {
         Button(action: onTap) {
@@ -38,7 +43,7 @@ struct DayCell: View {
                 }
                 Spacer() // Always push content to the top
             }
-            .frame(width: 50, height: 60)
+            .frame(width: cellWidth, height: 60)
             .background(
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color(.systemGray6))
@@ -65,34 +70,39 @@ struct DayCell: View {
             date: Date(),
             workDay: WorkDay(date: Date(), homeHours: 4.5, officeHours: 3.0),
             isCurrentMonth: true,
+            displayWeekends: true,
             onTap: {}
         )
-        
+
         DayCell(
             date: Date(),
             workDay: WorkDay(date: Date(), homeHours: 8.0, officeHours: 0.0),
             isCurrentMonth: true,
+            displayWeekends: true,
             onTap: {}
         )
-        
+
         DayCell(
             date: Date(),
             workDay: WorkDay(date: Date(), homeHours: 0.0, officeHours: 8.0),
             isCurrentMonth: true,
+            displayWeekends: true,
             onTap: {}
         )
-        
+
         DayCell(
             date: Date(),
             workDay: nil,
             isCurrentMonth: true,
+            displayWeekends: false,
             onTap: {}
         )
-        
+
         DayCell(
             date: Date(),
             workDay: nil,
             isCurrentMonth: false,
+            displayWeekends: false,
             onTap: {}
         )
     }

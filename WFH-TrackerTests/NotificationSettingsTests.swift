@@ -11,6 +11,7 @@ struct NotificationSettingsTests {
         #expect(settings.dayOfWeek == 6) // Friday
         #expect(settings.hour == 16) // 4 PM
         #expect(settings.minute == 0)
+        #expect(settings.displayWeekends == false) // Weekends disabled by default
     }
 
     @Test func testNotificationSettingsCustomInitialization() async throws {
@@ -18,13 +19,15 @@ struct NotificationSettingsTests {
             isEnabled: true,
             dayOfWeek: 2, // Monday
             hour: 9,
-            minute: 30
+            minute: 30,
+            displayWeekends: true
         )
 
         #expect(settings.isEnabled == true)
         #expect(settings.dayOfWeek == 2)
         #expect(settings.hour == 9)
         #expect(settings.minute == 30)
+        #expect(settings.displayWeekends == true)
     }
 
     @Test func testNotificationSettingsValidation() async throws {
@@ -106,7 +109,8 @@ struct NotificationSettingsTests {
             isEnabled: true,
             dayOfWeek: 3,
             hour: 14,
-            minute: 45
+            minute: 45,
+            displayWeekends: true
         )
 
         // Encode
@@ -122,6 +126,7 @@ struct NotificationSettingsTests {
         #expect(decodedSettings.dayOfWeek == originalSettings.dayOfWeek)
         #expect(decodedSettings.hour == originalSettings.hour)
         #expect(decodedSettings.minute == originalSettings.minute)
+        #expect(decodedSettings.displayWeekends == originalSettings.displayWeekends)
     }
 
     @Test func testEquatableConformance() async throws {
@@ -140,5 +145,14 @@ struct NotificationSettingsTests {
         #expect(defaultSettings.dayOfWeek == 6)
         #expect(defaultSettings.hour == 16)
         #expect(defaultSettings.minute == 0)
+        #expect(defaultSettings.displayWeekends == false)
+    }
+
+    @Test func testDisplayWeekendsProperty() async throws {
+        let weekendsEnabled = NotificationSettings(displayWeekends: true)
+        #expect(weekendsEnabled.displayWeekends == true)
+
+        let weekendsDisabled = NotificationSettings(displayWeekends: false)
+        #expect(weekendsDisabled.displayWeekends == false)
     }
 }

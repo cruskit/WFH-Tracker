@@ -277,4 +277,57 @@ struct SettingsManagerTests {
         // Clean up
         UserDefaults.standard.removeObject(forKey: testStorageKey)
     }
+
+    @Test func testUpdateDisplayWeekends() async throws {
+        let testStorageKey = "testDisplayWeekends_\(UUID().uuidString)"
+        let mockService = MockNotificationService()
+        let manager = SettingsManager(
+            userDefaults: UserDefaults.standard,
+            storageKey: testStorageKey,
+            notificationService: mockService
+        )
+
+        // Test initial state (should be false by default)
+        #expect(manager.notificationSettings.displayWeekends == false)
+
+        // Test enabling display weekends
+        manager.updateDisplayWeekends(true)
+        #expect(manager.notificationSettings.displayWeekends == true)
+
+        // Test disabling display weekends
+        manager.updateDisplayWeekends(false)
+        #expect(manager.notificationSettings.displayWeekends == false)
+
+        // Clean up
+        UserDefaults.standard.removeObject(forKey: testStorageKey)
+    }
+
+    @Test func testDisplayWeekendsPersistence() async throws {
+        let testStorageKey = "testDisplayWeekendsPersistence_\(UUID().uuidString)"
+        let mockService = MockNotificationService()
+
+        // Create first manager and enable display weekends
+        let manager1 = SettingsManager(
+            userDefaults: UserDefaults.standard,
+            storageKey: testStorageKey,
+            notificationService: mockService
+        )
+
+        manager1.updateDisplayWeekends(true)
+
+        // Wait for persistence
+        try await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+
+        // Create second manager and verify setting persisted
+        let manager2 = SettingsManager(
+            userDefaults: UserDefaults.standard,
+            storageKey: testStorageKey,
+            notificationService: mockService
+        )
+
+        #expect(manager2.notificationSettings.displayWeekends == true)
+
+        // Clean up
+        UserDefaults.standard.removeObject(forKey: testStorageKey)
+    }
 }
