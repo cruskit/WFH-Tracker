@@ -85,6 +85,10 @@ class SettingsManager: ObservableObject {
         notificationSettings.displayWeekends = displayWeekends
     }
 
+    func updateDefaultHours(_ hours: Double) {
+        notificationSettings.defaultHoursPerDay = max(1.0, min(12.0, hours))
+    }
+
     func resetToDefaults() {
         notificationSettings = .default
     }

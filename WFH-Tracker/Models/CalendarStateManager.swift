@@ -109,6 +109,24 @@ class CalendarStateManager: ObservableObject {
         }
         savePersistedData()
     }
+
+    func updateWorkDays(_ newWorkDays: [WorkDay]) async {
+        for workDay in newWorkDays {
+            if let index = workDays.firstIndex(where: { day in
+                calendar.isDate(day.date, inSameDayAs: workDay.date)
+            }) {
+                if workDay.hasData {
+                    workDays[index] = workDay
+                } else {
+                    // Remove work day if no data
+                    workDays.remove(at: index)
+                }
+            } else if workDay.hasData {
+                workDays.append(workDay)
+            }
+        }
+        savePersistedData()
+    }
     
     func deleteWorkDay(for date: Date) {
         workDays.removeAll { workDay in
@@ -160,7 +178,7 @@ class CalendarStateManager: ObservableObject {
 
         // Check if any work day has logged hours
         return weekWorkDays.contains { workDay in
-            (workDay.homeHours ?? 0) > 0 || (workDay.officeHours ?? 0) > 0
+            workDay.totalHours > 0
         }
     }
 
@@ -176,7 +194,7 @@ class CalendarStateManager: ObservableObject {
         }
 
         return weekWorkDays.contains { workDay in
-            (workDay.homeHours ?? 0) > 0 || (workDay.officeHours ?? 0) > 0
+            workDay.totalHours > 0
         }
     }
 

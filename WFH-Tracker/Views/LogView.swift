@@ -110,9 +110,7 @@ struct LogView: View {
                 existingWorkDays: existingWorkDays,
                 onSave: { workDays in
                     Task {
-                        for workDay in workDays {
-                            await calendarManager.updateWorkDay(workDay)
-                        }
+                        await calendarManager.updateWorkDays(workDays)
                         selectedDate = nil
                     }
                 },

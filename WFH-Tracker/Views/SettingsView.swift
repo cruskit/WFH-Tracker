@@ -35,6 +35,34 @@ struct SettingsView: View {
                     Text("Show Saturday and Sunday in the calendar view. When disabled, only Monday through Friday are displayed.")
                 }
 
+                // Work Hours Section
+                Section {
+                    HStack {
+                        Image(systemName: "clock.fill")
+                            .foregroundColor(.green)
+                            .frame(width: 24)
+
+                        Text("Default Hours per Day")
+                            .font(.body)
+
+                        Spacer()
+
+                        Stepper(value: Binding(
+                            get: { settingsManager.notificationSettings.defaultHoursPerDay },
+                            set: { settingsManager.updateDefaultHours($0) }
+                        ), in: 1.0...12.0, step: 0.1) {
+                            Text(String(format: "%.1f", settingsManager.notificationSettings.defaultHoursPerDay))
+                                .foregroundColor(.primary)
+                                .fontWeight(.medium)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                } header: {
+                    Text("Work Hours")
+                } footer: {
+                    Text("Default number of hours used when selecting a work type for a day. You can still use advanced entry for custom hours.")
+                }
+
                 // Notifications Section
                 Section {
                     VStack(alignment: .leading, spacing: 8) {

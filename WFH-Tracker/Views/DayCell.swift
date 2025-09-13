@@ -21,25 +21,12 @@ struct DayCell: View {
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(isCurrentMonth ? .primary : .secondary)
                 
-                // Work location emojis (if any)
+                // Work type icons (if any)
                 if let workDay = workDay, workDay.hasData {
-                    if hasHomeHours && hasOfficeHours {
-                        ZStack {
-                            Text("🏠")
-                                .font(.system(size: 13))
-                                .position(x: 15, y: 10)
-                            Text("🏢")
-                                .font(.system(size: 13))
-                                .position(x: 30, y: 20)
-                        }
-                        .frame(width: 50, height: 24)
-                    } else if hasHomeHours {
-                        Text("🏠")
-                            .font(.system(size: 20))
-                    } else if hasOfficeHours {
-                        Text("🏢")
-                            .font(.system(size: 20))
-                    }
+                    WorkTypeIconsView(
+                        workTypes: workDay.activeWorkTypes,
+                        cellWidth: cellWidth
+                    )
                 }
                 Spacer() // Always push content to the top
             }
@@ -53,15 +40,6 @@ struct DayCell: View {
         .buttonStyle(PlainButtonStyle())
     }
     
-    private var hasHomeHours: Bool {
-        guard let workDay = workDay, workDay.hasData else { return false }
-        return workDay.homeHours != nil && workDay.homeHours! > 0
-    }
-    
-    private var hasOfficeHours: Bool {
-        guard let workDay = workDay, workDay.hasData else { return false }
-        return workDay.officeHours != nil && workDay.officeHours! > 0
-    }
 }
 
 #Preview {
@@ -107,4 +85,65 @@ struct DayCell: View {
         )
     }
     .padding()
+}
+
+// MARK: - Work Type Icons Component
+
+struct WorkTypeIconsView: View {
+    let workTypes: [WorkType]
+    let cellWidth: CGFloat
+
+    var body: some View {
+        if workTypes.count == 1 {
+            // Single large icon
+            Text(workTypes[0].icon)
+                .font(.system(size: 20))
+        } else if workTypes.count == 2 {
+            // Two icons arranged diagonally
+            ZStack {
+                Text(workTypes[0].icon)
+                    .font(.system(size: 13))
+                    .position(x: cellWidth * 0.3, y: 10)
+                Text(workTypes[1].icon)
+                    .font(.system(size: 13))
+                    .position(x: cellWidth * 0.6, y: 20)
+            }
+            .frame(width: cellWidth, height: 24)
+        } else if workTypes.count == 3 {
+            // Three icons in triangular arrangement
+            ZStack {
+                Text(workTypes[0].icon)
+                    .font(.system(size: 11))
+                    .position(x: cellWidth * 0.5, y: 8)
+                Text(workTypes[1].icon)
+                    .font(.system(size: 11))
+                    .position(x: cellWidth * 0.3, y: 18)
+                Text(workTypes[2].icon)
+                    .font(.system(size: 11))
+                    .position(x: cellWidth * 0.7, y: 18)
+            }
+            .frame(width: cellWidth, height: 24)
+        } else if workTypes.count >= 4 {
+            // Four icons in 2x2 grid
+            VStack(spacing: 2) {
+                HStack(spacing: 2) {
+                    Text(workTypes[0].icon)
+                        .font(.system(size: 10))
+                    Text(workTypes[1].icon)
+                        .font(.system(size: 10))
+                }
+                HStack(spacing: 2) {
+                    Text(workTypes[2].icon)
+                        .font(.system(size: 10))
+                    if workTypes.count > 3 {
+                        Text(workTypes[3].icon)
+                            .font(.system(size: 10))
+                    } else {
+                        Spacer().frame(width: 12, height: 12)
+                    }
+                }
+            }
+            .frame(width: cellWidth, height: 24)
+        }
+    }
 } 

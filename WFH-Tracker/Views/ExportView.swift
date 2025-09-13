@@ -64,35 +64,39 @@ struct ExportView: View {
     }
     
     private func generateCSVString(for year: FinancialYear) -> String {
-        var csvText = "date,day of week,home days,office days,home hours,office hours\n"
-        
+        var csvText = "date,day of week,home days,office days,holiday days,sick days,home hours,office hours,holiday hours,sick hours\n"
+
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "dd/MM/yyyy"
-        
+
         let dayFormatter = DateFormatter()
         dayFormatter.dateFormat = "EEEE"
-        
+
         var currentDate = year.startDate
         let calendar = Calendar.current
-        
+
         while currentDate <= year.endDate {
             let workDay = calendarManager.getWorkDay(for: currentDate)
-            
+
             let homeHours = workDay?.homeHours ?? 0
             let officeHours = workDay?.officeHours ?? 0
-            
+            let holidayHours = workDay?.holidayHours ?? 0
+            let sickHours = workDay?.sickHours ?? 0
+
             let homeDays = round((homeHours / 8.0) * 10) / 10.0
             let officeDays = round((officeHours / 8.0) * 10) / 10.0
-            
+            let holidayDays = round((holidayHours / 8.0) * 10) / 10.0
+            let sickDays = round((sickHours / 8.0) * 10) / 10.0
+
             let dateString = dateFormatter.string(from: currentDate)
             let dayString = dayFormatter.string(from: currentDate)
-            
-            let row = "\(dateString),\(dayString),\(homeDays),\(officeDays),\(homeHours),\(officeHours)\n"
+
+            let row = "\(dateString),\(dayString),\(homeDays),\(officeDays),\(holidayDays),\(sickDays),\(homeHours),\(officeHours),\(holidayHours),\(sickHours)\n"
             csvText.append(row)
-            
+
             currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate)!
         }
-        
+
         return csvText
     }
 }

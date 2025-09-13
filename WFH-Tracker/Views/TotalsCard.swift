@@ -22,7 +22,7 @@ struct TotalsCard: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                
+
                 HStack {
                     Text("Office:")
                         .foregroundColor(.secondary)
@@ -32,6 +32,34 @@ struct TotalsCard: View {
                     + Text(" (\(String(format: "%.0fh", totals.officeHours)))")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                }
+
+                // Show Holiday hours if any
+                if totals.holidayHours > 0 {
+                    HStack {
+                        Text("Holiday:")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text("\(Int(round(totals.holidayHours / 8.0)))d")
+                            .fontWeight(.medium)
+                        + Text(" (\(String(format: "%.0fh", totals.holidayHours)))")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                // Show Sick hours if any
+                if totals.sickHours > 0 {
+                    HStack {
+                        Text("Sick:")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text("\(Int(round(totals.sickHours / 8.0)))d")
+                            .fontWeight(.medium)
+                        + Text(" (\(String(format: "%.0fh", totals.sickHours)))")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
         }
@@ -47,12 +75,12 @@ struct TotalsCard: View {
     VStack(spacing: 16) {
         TotalsCard(
             title: "Monthly Totals",
-            totals: WorkTotals(homeHours: 45.5, officeHours: 32.0)
+            totals: WorkTotals(homeHours: 45.5, officeHours: 32.0, holidayHours: 16.0, sickHours: 8.0)
         )
-        
+
         TotalsCard(
             title: "Yearly Totals",
-            totals: WorkTotals(homeHours: 520.0, officeHours: 380.5)
+            totals: WorkTotals(homeHours: 520.0, officeHours: 380.5, holidayHours: 120.0, sickHours: 40.0)
         )
     }
     .padding()

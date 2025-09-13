@@ -6,13 +6,15 @@ struct NotificationSettings: Codable, Equatable {
     var hour: Int // 0-23
     var minute: Int // 0-59
     var displayWeekends: Bool // Whether to show weekends in calendar
+    var defaultHoursPerDay: Double // Default hours for simple work type selection
 
-    init(isEnabled: Bool = false, dayOfWeek: Int = 6, hour: Int = 16, minute: Int = 0, displayWeekends: Bool = false) {
+    init(isEnabled: Bool = false, dayOfWeek: Int = 6, hour: Int = 16, minute: Int = 0, displayWeekends: Bool = false, defaultHoursPerDay: Double = 8.0) {
         self.isEnabled = isEnabled
         self.dayOfWeek = max(1, min(7, dayOfWeek)) // Ensure valid day range
         self.hour = max(0, min(23, hour)) // Ensure valid hour range
         self.minute = max(0, min(59, minute)) // Ensure valid minute range
         self.displayWeekends = displayWeekends
+        self.defaultHoursPerDay = max(1.0, min(12.0, defaultHoursPerDay)) // Ensure valid hours range
     }
 
     var dayName: String {
