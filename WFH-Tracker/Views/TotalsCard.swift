@@ -34,32 +34,26 @@ struct TotalsCard: View {
                         .foregroundColor(.secondary)
                 }
 
-                // Show Holiday hours if any
-                if totals.holidayHours > 0 {
-                    HStack {
-                        Text("Holiday:")
-                            .foregroundColor(.secondary)
-                        Spacer()
-                        Text("\(Int(round(totals.holidayHours / 8.0)))d")
-                            .fontWeight(.medium)
-                        + Text(" (\(String(format: "%.0fh", totals.holidayHours)))")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
+                HStack {
+                    Text("Holiday:")
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("\(Int(round(totals.holidayHours / 8.0)))d")
+                        .fontWeight(.medium)
+                    + Text(" (\(String(format: "%.0fh", totals.holidayHours)))")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
 
-                // Show Sick hours if any
-                if totals.sickHours > 0 {
-                    HStack {
-                        Text("Sick:")
-                            .foregroundColor(.secondary)
-                        Spacer()
-                        Text("\(Int(round(totals.sickHours / 8.0)))d")
-                            .fontWeight(.medium)
-                        + Text(" (\(String(format: "%.0fh", totals.sickHours)))")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
+                HStack {
+                    Text("Sick:")
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("\(Int(round(totals.sickHours / 8.0)))d")
+                        .fontWeight(.medium)
+                    + Text(" (\(String(format: "%.0fh", totals.sickHours)))")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
             }
         }
