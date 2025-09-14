@@ -6,35 +6,38 @@
 //
 
 import SwiftUI
+import OSLog
 
 struct ContentView: View {
-    @StateObject private var calendarManager = CalendarStateManager()
+    @EnvironmentObject var diContainer: DIContainer
     @EnvironmentObject var appState: AppState
     @State private var selectedFinancialYear: FinancialYear?
 
     var body: some View {
         TabView {
-            LogView(calendarManager: calendarManager)
+            LogView()
                 .tabItem {
                     Image(systemName: "calendar")
                     Text("Log")
                 }
+                .accessibilityLabel("Work hours log tab")
 
             ExportView(selectedYear: $selectedFinancialYear)
-                .environmentObject(calendarManager)
                 .tabItem {
                     Image(systemName: "square.and.arrow.up")
                     Text("Export")
                 }
+                .accessibilityLabel("Export data tab")
 
             SettingsView()
                 .tabItem {
                     Image(systemName: "gear")
                     Text("Settings")
                 }
+                .accessibilityLabel("Settings tab")
         }
         .onAppear(perform: setupInitialFinancialYear)
-        .onChange(of: calendarManager.financialYears) { _ in
+        .onChange(of: diContainer.calendarStateManager.financialYears) { _ in
             setupInitialFinancialYear()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("OpenCurrentWeekEntry"))) { _ in
@@ -45,7 +48,8 @@ struct ContentView: View {
 
     private func setupInitialFinancialYear() {
         if selectedFinancialYear == nil {
-            selectedFinancialYear = calendarManager.financialYears.first
+            selectedFinancialYear = diContainer.calendarStateManager.financialYears.first
+            Logger.ui.logInfo("Initial financial year set", context: "ContentView")
         }
     }
 

@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import OSLog
 
 @MainActor
 class CalendarStateManager: ObservableObject {
@@ -65,11 +66,17 @@ class CalendarStateManager: ObservableObject {
     // MARK: - Data Persistence
     
     private func loadPersistedData() {
-        if let data = userDefaults.data(forKey: storageKey),
-           let decodedWorkDays = try? JSONDecoder().decode([WorkDay].self, from: data) {
-            workDays = decodedWorkDays
-        } else {
-            // If loading fails, start with empty array
+        do {
+            if let data = userDefaults.data(forKey: storageKey) {
+                let decodedWorkDays = try JSONDecoder().decode([WorkDay].self, from: data)
+                workDays = decodedWorkDays
+                Logger.persistence.logInfo("Successfully loaded \(workDays.count) work days", context: "CalendarStateManager")
+            } else {
+                workDays = []
+                Logger.persistence.logInfo("No existing data found, starting with empty array", context: "CalendarStateManager")
+            }
+        } catch {
+            Logger.persistence.logError(WFHTrackerError.persistenceFailure(error.localizedDescription), context: "CalendarStateManager.loadPersistedData")
             workDays = []
         }
     }
@@ -78,8 +85,9 @@ class CalendarStateManager: ObservableObject {
         do {
             let encodedData = try JSONEncoder().encode(workDays)
             userDefaults.set(encodedData, forKey: storageKey)
+            Logger.persistence.logInfo("Successfully saved \(workDays.count) work days", context: "CalendarStateManager")
         } catch {
-            print("Failed to save work days data: \(error)")
+            Logger.persistence.logError(WFHTrackerError.persistenceFailure(error.localizedDescription), context: "CalendarStateManager.savePersistedData")
         }
     }
     
@@ -99,33 +107,47 @@ class CalendarStateManager: ObservableObject {
         }
     }
     
-    func updateWorkDay(_ workDay: WorkDay) async {
-        if let index = workDays.firstIndex(where: { day in
-            calendar.isDate(day.date, inSameDayAs: workDay.date)
-        }) {
-            workDays[index] = workDay
-        } else {
-            workDays.append(workDay)
-        }
-        savePersistedData()
-    }
-
-    func updateWorkDays(_ newWorkDays: [WorkDay]) async {
-        for workDay in newWorkDays {
+    nonisolated func updateWorkDay(_ workDay: WorkDay) async {
+        await MainActor.run {
             if let index = workDays.firstIndex(where: { day in
                 calendar.isDate(day.date, inSameDayAs: workDay.date)
             }) {
-                if workDay.hasData {
-                    workDays[index] = workDay
-                } else {
-                    // Remove work day if no data
-                    workDays.remove(at: index)
-                }
-            } else if workDay.hasData {
+                workDays[index] = workDay
+                Logger.stateManagement.logInfo("Updated existing work day for \(workDay.date)", context: "CalendarStateManager")
+            } else {
                 workDays.append(workDay)
+                Logger.stateManagement.logInfo("Added new work day for \(workDay.date)", context: "CalendarStateManager")
             }
+            savePersistedData()
         }
-        savePersistedData()
+    }
+
+    nonisolated func updateWorkDays(_ newWorkDays: [WorkDay]) async {
+        await MainActor.run {
+            var updateCount = 0
+            var removeCount = 0
+            var addCount = 0
+
+            for workDay in newWorkDays {
+                if let index = workDays.firstIndex(where: { day in
+                    calendar.isDate(day.date, inSameDayAs: workDay.date)
+                }) {
+                    if workDay.hasData {
+                        workDays[index] = workDay
+                        updateCount += 1
+                    } else {
+                        workDays.remove(at: index)
+                        removeCount += 1
+                    }
+                } else if workDay.hasData {
+                    workDays.append(workDay)
+                    addCount += 1
+                }
+            }
+
+            Logger.stateManagement.logInfo("Batch update: \(updateCount) updated, \(addCount) added, \(removeCount) removed", context: "CalendarStateManager")
+            savePersistedData()
+        }
     }
     
     func deleteWorkDay(for date: Date) {
@@ -135,9 +157,13 @@ class CalendarStateManager: ObservableObject {
         savePersistedData()
     }
     
-    func clearAllData() async {
-        workDays.removeAll()
-        savePersistedData()
+    nonisolated func clearAllData() async {
+        await MainActor.run {
+            let previousCount = workDays.count
+            workDays.removeAll()
+            Logger.stateManagement.logInfo("Cleared \(previousCount) work days", context: "CalendarStateManager")
+            savePersistedData()
+        }
     }
     
     // MARK: - Totals Calculation

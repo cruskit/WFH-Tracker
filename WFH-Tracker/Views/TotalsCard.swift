@@ -1,4 +1,5 @@
 import SwiftUI
+import OSLog
 
 struct TotalsCard: View {
     let title: String
@@ -9,52 +10,17 @@ struct TotalsCard: View {
             Text(title)
                 .font(.headline)
                 .fontWeight(.semibold)
-                .foregroundColor(.primary)
+                .foregroundStyle(.primary)
+                .accessibilityAddTraits(.isHeader)
             
             VStack(spacing: 8) {
-                HStack {
-                    Text("Home:")
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Text("\(Int(round(totals.homeHours / 8.0)))d")
-                        .fontWeight(.medium)
-                    + Text(" (\(String(format: "%.0fh", totals.homeHours)))")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+                totalsRow("Home", hours: totals.homeHours, color: .blue)
 
-                HStack {
-                    Text("Office:")
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Text("\(Int(round(totals.officeHours / 8.0)))d")
-                        .fontWeight(.medium)
-                    + Text(" (\(String(format: "%.0fh", totals.officeHours)))")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+                totalsRow("Office", hours: totals.officeHours, color: .green)
 
-                HStack {
-                    Text("Holiday:")
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Text("\(Int(round(totals.holidayHours / 8.0)))d")
-                        .fontWeight(.medium)
-                    + Text(" (\(String(format: "%.0fh", totals.holidayHours)))")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+                totalsRow("Holiday", hours: totals.holidayHours, color: .orange)
 
-                HStack {
-                    Text("Sick:")
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Text("\(Int(round(totals.sickHours / 8.0)))d")
-                        .fontWeight(.medium)
-                    + Text(" (\(String(format: "%.0fh", totals.sickHours)))")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+                totalsRow("Sick", hours: totals.sickHours, color: .red)
             }
         }
         .padding(16)
@@ -62,6 +28,34 @@ struct TotalsCard: View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color(.systemGray6))
         )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("\(title) work summary")
+    }
+
+    // MARK: - Helper Views
+
+    @ViewBuilder
+    private func totalsRow(_ label: String, hours: Double, color: Color) -> some View {
+        HStack {
+            Text("\(label):")
+                .foregroundStyle(.secondary)
+
+            Spacer()
+
+            if hours > 0 {
+                Text("\(Int(round(hours / 8.0)))d")
+                    .fontWeight(.medium)
+                    .foregroundStyle(.primary)
+                + Text(" (\(String(format: "%.0fh", hours)))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("0d (0h)")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label): \(Int(round(hours / 8.0))) days, \(Int(hours)) hours")
     }
 }
 

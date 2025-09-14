@@ -7,19 +7,23 @@
 
 import SwiftUI
 import UserNotifications
+import OSLog
 
 @main
 struct WFH_TrackerApp: App {
+    @StateObject private var diContainer = DIContainer.shared
     @StateObject private var appState = AppState()
 
     init() {
         // Setup notification categories on app launch
         NotificationService.shared.setupNotificationCategories()
+        Logger.ui.logInfo("WFH Tracker app initialized", context: "WFH_TrackerApp")
     }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(diContainer)
                 .environmentObject(appState)
                 .onAppear {
                     // Handle any pending notification actions
@@ -31,6 +35,7 @@ struct WFH_TrackerApp: App {
     private func handleAppLaunch() {
         // Set up notification delegate
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
+        Logger.ui.logInfo("App launch handling completed", context: "WFH_TrackerApp")
     }
 }
 

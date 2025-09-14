@@ -1,5 +1,6 @@
 import Foundation
 import UserNotifications
+import OSLog
 
 protocol NotificationServiceProtocol {
     func requestPermission() async -> Bool
@@ -23,9 +24,10 @@ class NotificationService: NotificationServiceProtocol {
             let granted = try await notificationCenter.requestAuthorization(
                 options: [.alert, .sound, .badge]
             )
+            Logger.notifications.logInfo("Permission request result: \(granted)", context: "NotificationService")
             return granted
         } catch {
-            print("Failed to request notification permission: \(error)")
+            Logger.notifications.logError(error, context: "NotificationService.requestPermission")
             return false
         }
     }
@@ -50,7 +52,7 @@ class NotificationService: NotificationServiceProtocol {
         // Check permission before scheduling
         let status = await checkPermissionStatus()
         guard status == .authorized else {
-            print("Notification permission not granted")
+            Logger.notifications.logWarning("Notification permission not granted, status: \(status)", context: "NotificationService")
             return
         }
 
@@ -87,16 +89,16 @@ class NotificationService: NotificationServiceProtocol {
 
         do {
             try await notificationCenter.add(request)
-            print("Weekly reminder scheduled for \(settings.dayName) at \(settings.timeString)")
+            Logger.notifications.logInfo("Weekly reminder scheduled for \(settings.dayName) at \(settings.timeString)", context: "NotificationService")
         } catch {
-            print("Failed to schedule notification: \(error)")
+            Logger.notifications.logError(error, context: "NotificationService.scheduleWeeklyReminder")
         }
     }
 
     func cancelAllNotifications() async {
         notificationCenter.removeAllPendingNotificationRequests()
         notificationCenter.removeAllDeliveredNotifications()
-        print("All notifications cancelled")
+        Logger.notifications.logInfo("All notifications cancelled", context: "NotificationService")
     }
 
     // MARK: - Notification Content Logic
@@ -111,7 +113,8 @@ class NotificationService: NotificationServiceProtocol {
         }
 
         // Check if any work days exist for the current week
-        let weekDays = await calendarManager.workDays.filter { workDay in
+        let allWorkDays = await calendarManager.workDays
+        let weekDays = allWorkDays.filter { workDay in
             weekInterval.contains(workDay.date)
         }
 
@@ -167,9 +170,9 @@ class NotificationService: NotificationServiceProtocol {
 
         do {
             try await notificationCenter.add(request)
-            print("Test notification scheduled for \(seconds) seconds")
+            Logger.notifications.logInfo("Test notification scheduled for \(seconds) seconds", context: "NotificationService")
         } catch {
-            print("Failed to schedule test notification: \(error)")
+            Logger.notifications.logError(error, context: "NotificationService.scheduleTestNotification")
         }
     }
 }

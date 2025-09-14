@@ -1,4 +1,5 @@
 import SwiftUI
+import OSLog
 
 struct MultiMonthCalendarView: View {
     @ObservedObject var calendarManager: CalendarStateManager
@@ -48,13 +49,14 @@ struct MultiMonthCalendarView: View {
             // Multi-month calendar with horizontal paging
             TabView(selection: $currentPageIndex) {
                 ForEach(Array(calendarManager.visibleMonths.enumerated()), id: \.offset) { index, month in
-                    CalendarView(
+                    LazyCalendarView(
                         calendarMonth: month,
                         workDays: calendarManager.workDays,
                         displayWeekends: displayWeekends,
                         onDayTap: onDayTap
                     )
                     .tag(index)
+                    .id("month-\(index)-weekends-\(displayWeekends)") // Force refresh when displayWeekends changes
                 }
             }
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
@@ -71,10 +73,12 @@ struct MultiMonthCalendarView: View {
             // Scrolled to previous month
             calendarManager.previousMonth()
             currentPageIndex = 1 // Reset to middle
+            Logger.ui.logInfo("Navigated to previous month", context: "MultiMonthCalendarView")
         } else if newIndex == 2 {
             // Scrolled to next month
             calendarManager.nextMonth()
             currentPageIndex = 1 // Reset to middle
+            Logger.ui.logInfo("Navigated to next month", context: "MultiMonthCalendarView")
         }
     }
 }

@@ -1,6 +1,6 @@
 import Foundation
 
-struct CalendarMonth {
+struct CalendarMonth: Equatable {
     let date: Date
     let calendar = Calendar.current
     
