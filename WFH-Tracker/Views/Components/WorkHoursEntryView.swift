@@ -187,7 +187,8 @@ struct WorkHoursEntryView: View {
             // Deselect if already selected
             newEntry.clear()
         } else {
-            // Select new work type with default hours
+            // Clear all work types first, then set the selected one
+            newEntry.clear()
             let defaultHours = diContainer.settingsManager.notificationSettings.defaultHoursPerDay
             newEntry.setWorkType(workType, hours: defaultHours)
         }
