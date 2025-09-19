@@ -12,14 +12,24 @@ struct DayCell: View {
     private var cellWidth: CGFloat {
         displayWeekends ? 50 : 70
     }
+
+    private var isToday: Bool {
+        calendar.isDateInToday(date)
+    }
     
     var body: some View {
         Button(action: onTap) {
             VStack(spacing: 2) {
                 // Date header (always at the top)
                 Text("\(calendar.component(.day, from: date))")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(isCurrentMonth ? .primary : .secondary)
+                    .font(.system(size: 16, weight: isToday ? .bold : .medium))
+                    .foregroundColor(isToday ? .white : (isCurrentMonth ? .primary : .secondary))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(isToday ? Color.blue : Color.clear)
+                    )
                 
                 // Work type icons (if any)
                 if let workDay = workDay, workDay.hasData {
