@@ -7,6 +7,9 @@ struct DayAdvancedEntryView: View {
     let onCancel: () -> Void
 
     @State private var hours: [WorkType: Double] = [:]
+    @State private var editingType: WorkType?
+    @State private var editingText: String = ""
+    @FocusState private var fieldFocused: WorkType?
 
     private let dateFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -76,6 +79,11 @@ struct DayAdvancedEntryView: View {
             .padding(.top, 8)
         }
         .background(Color.breezeBackground.ignoresSafeArea())
+        .onChange(of: fieldFocused) { _, newValue in
+            if newValue == nil, let type = editingType {
+                commitEdit(for: type)
+            }
+        }
         .onAppear { loadExisting() }
     }
 
@@ -107,6 +115,7 @@ struct DayAdvancedEntryView: View {
             // Stepper
             HStack(spacing: 10) {
                 Button {
+                    if let editing = editingType { commitEdit(for: editing) }
                     let cur = hours[type] ?? 0
                     hours[type] = max(0, cur - 0.5)
                 } label: {
@@ -118,12 +127,27 @@ struct DayAdvancedEntryView: View {
                 }
                 .buttonStyle(.plain)
 
-                Text(formatHours(hours[type] ?? 0))
-                    .font(.breezeDisplay(18))
-                    .foregroundStyle(Color.breezeInk)
-                    .frame(minWidth: 36, alignment: .center)
+                Group {
+                    if editingType == type {
+                        TextField("0", text: $editingText)
+                            .font(.breezeDisplay(18))
+                            .foregroundStyle(Color.breezeInk)
+                            .multilineTextAlignment(.center)
+                            .keyboardType(.decimalPad)
+                            .focused($fieldFocused, equals: type)
+                            .frame(minWidth: 46)
+                    } else {
+                        Text(formatHours(hours[type] ?? 0))
+                            .font(.breezeDisplay(18))
+                            .foregroundStyle(Color.breezeInk)
+                            .frame(minWidth: 36, alignment: .center)
+                            .contentShape(Rectangle())
+                            .onTapGesture { startEditing(type: type) }
+                    }
+                }
 
                 Button {
+                    if let editing = editingType { commitEdit(for: editing) }
                     let cur = hours[type] ?? 0
                     hours[type] = min(24, cur + 0.5)
                 } label: {
@@ -160,6 +184,27 @@ struct DayAdvancedEntryView: View {
         h.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(h))" : String(format: "%.1f", h)
     }
 
+    // MARK: - Edit helpers
+
+    private func startEditing(type: WorkType) {
+        if let current = editingType { commitEdit(for: current) }
+        editingType = type
+        editingText = formatHours(hours[type] ?? 0)
+        fieldFocused = type
+    }
+
+    private func commitEdit(for type: WorkType) {
+        if let value = Double(editingText) {
+            let clamped = min(24, max(0, value))
+            let rounded = (clamped * 10).rounded() / 10
+            hours[type] = rounded
+        }
+        editingType = nil
+        fieldFocused = nil
+    }
+
+    // MARK: - Persistence
+
     private func loadExisting() {
         guard let entry = existingEntry else { return }
         for type in WorkType.allCases {
@@ -168,6 +213,7 @@ struct DayAdvancedEntryView: View {
     }
 
     private func saveEntry() {
+        if let type = editingType { commitEdit(for: type) }
         let filtered = hours.filter { $0.value > 0 }
         var entry = WorkDayEntry()
         entry.workEntries = filtered
