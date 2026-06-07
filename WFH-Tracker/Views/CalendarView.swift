@@ -7,7 +7,7 @@ struct CalendarView: View {
     let onDayTap: (Date) -> Void
 
     private var weeks: [[Date]] {
-        displayWeekends ? calendarMonth.weeks : calendarMonth.weekdaysOnly(from: calendarMonth.weeks)
+        displayWeekends ? calendarMonth.filteredWeeks : calendarMonth.weekdaysOnly(from: calendarMonth.filteredWeeks)
     }
 
     var body: some View {

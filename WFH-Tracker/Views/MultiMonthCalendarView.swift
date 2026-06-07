@@ -26,7 +26,8 @@ struct MultiMonthCalendarView: View {
         let gaps = (cols - 1) * 7
         let cellW = (UIScreen.main.bounds.width - sidePad - gaps) / cols
         let cellH = cellW * 1.04
-        return 6 * (cellH + 7)
+        let maxWeeks = CGFloat(calendarManager.visibleMonths.map { $0.filteredWeeks.count }.max() ?? 5)
+        return maxWeeks * (cellH + 7)
     }
 
     var body: some View {

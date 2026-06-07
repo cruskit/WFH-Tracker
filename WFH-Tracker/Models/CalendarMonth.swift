@@ -45,6 +45,12 @@ struct CalendarMonth: Equatable {
         return weeks
     }
 
+    var filteredWeeks: [[Date]] {
+        weeks.filter { week in
+            week.contains { isDateInCurrentMonth($0) }
+        }
+    }
+
     func weekdaysOnly(from weeks: [[Date]]) -> [[Date]] {
         return weeks.map { week in
             week.filter { date in

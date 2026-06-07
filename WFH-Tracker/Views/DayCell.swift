@@ -71,12 +71,12 @@ struct DayCell: View {
     private var emojiContent: some View {
         if activeTypes.count == 1 {
             Text(activeTypes[0].icon)
-                .font(.system(size: 17))
+                .font(.system(size: 26))
         } else if activeTypes.count > 1 {
             HStack(spacing: 1) {
                 ForEach(activeTypes, id: \.self) { type in
                     Text(type.icon)
-                        .font(.system(size: 11))
+                        .font(.system(size: 17))
                 }
             }
         }
