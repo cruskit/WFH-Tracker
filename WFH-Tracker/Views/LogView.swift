@@ -216,7 +216,7 @@ struct LogView: View {
 
     private var weekStrip: some View {
         HStack(spacing: 0) {
-            ForEach(Array(mondayWeekDates.enumerated()), id: \.offset) { index, date in
+            ForEach(Array((displayWeekends ? mondayWeekDates : weekdayDates).enumerated()), id: \.offset) { index, date in
                 let types = calendarManager.getWorkDay(for: date)?.activeWorkTypes ?? []
                 let isToday = calendar.isDateInToday(date)
                 let dayNum = calendar.component(.day, from: date)
