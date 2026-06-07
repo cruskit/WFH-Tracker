@@ -7,6 +7,7 @@ struct SettingsView: View {
     @State private var showingPermissionAlert = false
     @State private var showingErrorAlert = false
     @State private var permissionStatus: UNAuthorizationStatus = .notDetermined
+    @State private var defaultHoursText: String = ""
 
     private var settings: NotificationSettings { diContainer.settingsManager.notificationSettings }
     private let weekdays = Calendar.current.weekdaySymbols
@@ -42,15 +43,19 @@ struct SettingsView: View {
                             title: "Default hours",
                             subtitle: "Filled in when you tap a work type"
                         ) {
-                            Stepper(value: Binding(
-                                get: { settings.defaultHoursPerDay },
-                                set: { diContainer.settingsManager.updateDefaultHours($0) }
-                            ), in: 1.0...12.0, step: 0.5) {
-                                Text(String(format: "%.1f h", settings.defaultHoursPerDay))
-                                    .font(.system(size: 14.5, weight: .heavy))
-                                    .foregroundStyle(Color.breezeInkMuted)
-                            }
-                            .labelsHidden()
+                            TextField("", text: $defaultHoursText)
+                                .keyboardType(.decimalPad)
+                                .multilineTextAlignment(.trailing)
+                                .font(.system(size: 14.5, weight: .heavy))
+                                .foregroundStyle(Color.breezeInkMuted)
+                                .frame(width: 60)
+                                .onChange(of: defaultHoursText) { _, newValue in
+                                    if let parsed = Double(newValue) {
+                                        let clamped = min(max(parsed, 0.1), 24.0)
+                                        let rounded = (clamped * 10).rounded() / 10
+                                        diContainer.settingsManager.updateDefaultHours(rounded)
+                                    }
+                                }
                         }
                     }
 
@@ -195,6 +200,7 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
+                defaultHoursText = String(format: "%.1f", settings.defaultHoursPerDay)
                 checkPermission()
                 Logger.ui.logInfo("Settings view appeared", context: "SettingsView")
             }
