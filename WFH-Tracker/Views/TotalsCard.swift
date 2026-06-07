@@ -38,6 +38,7 @@ struct TotalsCard: View {
             .padding(.top, 13)
         }
         .padding(16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(
             Group {
                 if isWarm { LinearGradient.breezeWarmGrad }
@@ -53,7 +54,7 @@ struct TotalsCard: View {
     }
 
     private func formatDays(_ d: Double) -> String {
-        d.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(d))" : String(format: "%.1f", d)
+        String(Int(d.rounded()))
     }
 }
 
