@@ -4,6 +4,7 @@ struct TotalsCard: View {
     let title: String
     let totals: WorkTotals
     var isWarm: Bool = false
+    var hoursPerDay: Double = 8.0
 
     private let types: [WorkType] = WorkType.allCases
 
@@ -19,13 +20,14 @@ struct TotalsCard: View {
             ) {
                 ForEach(types, id: \.self) { type in
                     let hrs = totals.hours(for: type)
+                    let days = hrs / hoursPerDay
                     HStack(alignment: .lastTextBaseline, spacing: 4) {
                         Text(type.icon)
                             .font(.system(size: 14))
-                        Text(formatHours(hrs))
+                        Text(formatDays(days))
                             .font(.breezeDisplay(19))
                             .foregroundStyle(.white)
-                        Text("h")
+                        Text("d")
                             .font(.system(size: 11, weight: .heavy))
                             .foregroundStyle(.white.opacity(0.8))
                     }
@@ -47,11 +49,11 @@ struct TotalsCard: View {
         .if(isWarm) { $0.breezeShadowWarm() }
         .if(!isWarm) { $0.breezeShadowBrand() }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title): \(Int(totals.totalHours)) total hours")
+        .accessibilityLabel("\(title): \(formatDays(totals.totalHours / hoursPerDay)) total days")
     }
 
-    private func formatHours(_ h: Double) -> String {
-        h.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(h))" : String(format: "%.1f", h)
+    private func formatDays(_ d: Double) -> String {
+        d.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(d))" : String(format: "%.1f", d)
     }
 }
 
@@ -67,11 +69,11 @@ extension View {
 #Preview {
     HStack(spacing: 11) {
         TotalsCard(
-            title: "January hours",
+            title: "January days",
             totals: WorkTotals(homeHours: 74, officeHours: 54, holidayHours: 16, sickHours: 8)
         )
         TotalsCard(
-            title: "FY 2024–25 hours",
+            title: "FY 2024–25 days",
             totals: WorkTotals(homeHours: 74, officeHours: 54, holidayHours: 16, sickHours: 8),
             isWarm: true
         )

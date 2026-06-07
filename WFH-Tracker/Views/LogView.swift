@@ -34,7 +34,7 @@ struct LogView: View {
 
     private func fyLabel(for month: CalendarMonth) -> String {
         let fy = financialYear(for: month)
-        return "FY \(fy - 1)–\(String(fy).suffix(2)) hours"
+        return "FY \(fy - 1)–\(String(fy).suffix(2)) days"
     }
 
     // MARK: - Week helpers
@@ -309,15 +309,17 @@ struct LogView: View {
     private var totalsSection: some View {
         HStack(spacing: 11) {
             TotalsCard(
-                title: calendarManager.currentMonth.monthName + " hours",
-                totals: calendarManager.getMonthlyTotals(for: calendarManager.currentMonth)
+                title: calendarManager.currentMonth.monthName + " days",
+                totals: calendarManager.getMonthlyTotals(for: calendarManager.currentMonth),
+                hoursPerDay: diContainer.settingsManager.notificationSettings.defaultHoursPerDay
             )
             TotalsCard(
                 title: fyLabel(for: calendarManager.currentMonth),
                 totals: calendarManager.getYearlyTotals(
                     for: financialYearStartMonth(for: calendarManager.currentMonth)
                 ),
-                isWarm: true
+                isWarm: true,
+                hoursPerDay: diContainer.settingsManager.notificationSettings.defaultHoursPerDay
             )
         }
         .accessibilityElement(children: .contain)
