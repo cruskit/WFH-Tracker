@@ -71,10 +71,6 @@ struct LogView: View {
 
             ScrollView {
                 VStack(spacing: 0) {
-                    weekHeroCard
-                        .padding(.horizontal, 16)
-                        .padding(.top, 14)
-
                     calendarSection
                         .padding(.top, 20)
 
