@@ -107,8 +107,7 @@ struct ExportView: View {
 
     private func fyDateRange(_ year: FinancialYear) -> String {
         let fmt = DateFormatter()
-        fmt.dateStyle = .medium
-        fmt.timeStyle = .none
+        fmt.dateFormat = "d MMM yyyy"
         return "\(fmt.string(from: year.startDate)) – \(fmt.string(from: year.endDate))"
     }
 
@@ -119,7 +118,7 @@ struct ExportView: View {
                 .foregroundStyle(.white.opacity(0.9))
 
             HStack(alignment: .center) {
-                Text(selectedYear.map { "\($0.startYear) – \($0.startYear + 1)" } ?? "—")
+                Text(verbatim: selectedYear.map { "\($0.startYear) – \($0.startYear + 1)" } ?? "—")
                     .font(.breezeDisplay(30))
                     .foregroundStyle(.white)
 
@@ -233,6 +232,7 @@ struct ExportView: View {
                     .foregroundStyle(Color.breezeInkFaint)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
     }
