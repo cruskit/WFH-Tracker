@@ -7,72 +7,69 @@ struct CompactDayEntryRow: View {
     let onWorkTypeSelected: (WorkType) -> Void
     let onAdvancedTapped: () -> Void
 
+    private let calendar = Calendar.current
+
+    private var isToday: Bool { calendar.isDateInToday(date) }
+
     var body: some View {
-        HStack(spacing: 8) {
-            // Day Info - Fixed width
+        HStack(spacing: 10) {
+            // Date badge
             VStack(spacing: 1) {
-                Text(DateFormatters.dayName.string(from: date))
-                    .font(.caption2)
-                    .fontWeight(.medium)
-                    .foregroundStyle(.secondary)
-
                 Text(DateFormatters.dayNumber.string(from: date))
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.primary)
-            }
-            .frame(width: 40, alignment: .center)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(DateFormatters.dayName.string(from: date)) \(DateFormatters.dayNumber.string(from: date))")
+                    .font(.breezeDisplay(17))
+                    .foregroundStyle(Color.breezeInk)
+                    .lineLimit(1)
 
-            // Work Type Buttons
-            HStack(spacing: 6) {
+                Text(DateFormatters.dayName.string(from: date).uppercased())
+                    .font(.system(size: 10.5, weight: .heavy))
+                    .foregroundStyle(Color.breezeInkFaint)
+            }
+            .frame(width: 38, alignment: .center)
+
+            // Work-type buttons
+            HStack(spacing: 7) {
                 ForEach(WorkType.allCases, id: \.self) { workType in
                     CompactWorkTypeButton(
                         workType: workType,
                         isSelected: entry.selectedWorkType == workType,
                         isActive: entry.workEntries[workType] != nil,
-                        onTapped: {
-                            onWorkTypeSelected(workType)
-                        }
+                        onTapped: { onWorkTypeSelected(workType) }
                     )
                 }
             }
-            .accessibilityElement(children: .contain)
-            .accessibilityLabel("Work type selection for \(DateFormatters.dayName.string(from: date))")
 
-            Spacer()
-
-            // Advanced Entry Button - Icon only
+            // Advanced entry button
             Button(action: onAdvancedTapped) {
-                Image(systemName: "gearshape.fill")
-                    .font(.system(size: 16))
-                    .foregroundStyle(.blue)
-                    .frame(width: 32, height: 32)
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Color.breezeBrandInk)
+                    .frame(width: 34, height: 34)
                     .background(
-                        Circle()
-                            .fill(.blue.opacity(0.1))
+                        RoundedRectangle(cornerRadius: 11, style: .continuous)
+                            .fill(Color.breezeBrandSoft)
                     )
-                    .scaleEffect(1.0)
-                    .animation(.easeInOut(duration: 0.15), value: entry.isAdvanced)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Advanced entry")
-            .accessibilityHint("Opens detailed time entry for \(DateFormatters.dayName.string(from: date))")
+            .accessibilityHint("Split hours across types for \(DateFormatters.dayName.string(from: date))")
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
         .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color(.systemGray6))
-                .opacity(entry.hasData ? 0.6 : 0.2)
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.breezeSurface)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .strokeBorder(isToday ? Color.breezeBrand : Color.breezeLine, lineWidth: isToday ? 2 : 1)
+                )
         )
+        .breezeShadowSm()
         .animation(.easeInOut(duration: 0.2), value: entry.hasData)
     }
 }
 
 #Preview {
-    VStack(spacing: 8) {
+    VStack(spacing: 9) {
         CompactDayEntryRow(
             date: Date(),
             entry: WorkDayEntry(selectedWorkType: .home, workEntries: [.home: 8.0]),
@@ -80,7 +77,6 @@ struct CompactDayEntryRow: View {
             onWorkTypeSelected: { _ in },
             onAdvancedTapped: {}
         )
-
         CompactDayEntryRow(
             date: Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date(),
             entry: WorkDayEntry(),
@@ -90,4 +86,5 @@ struct CompactDayEntryRow: View {
         )
     }
     .padding()
+    .background(Color.breezeBackground)
 }

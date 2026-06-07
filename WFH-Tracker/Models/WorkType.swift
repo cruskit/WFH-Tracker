@@ -9,53 +9,51 @@ enum WorkType: String, CaseIterable, Codable {
 
     var icon: String {
         switch self {
-        case .home:
-            return "🏠"
-        case .office:
-            return "🏢"
-        case .holiday:
-            return "🏖️"
-        case .sick:
-            return "🤒"
+        case .home: return "🏠"
+        case .office: return "🏢"
+        case .holiday: return "🏖️"
+        case .sick: return "🤒"
         }
     }
 
     var displayName: String {
         switch self {
-        case .home:
-            return "Home"
-        case .office:
-            return "Office"
-        case .holiday:
-            return "Holiday"
-        case .sick:
-            return "Sick"
+        case .home: return "Home"
+        case .office: return "Office"
+        case .holiday: return "Holiday"
+        case .sick: return "Sick"
         }
     }
 
+    // Primary work-type colour
     var color: Color {
         switch self {
-        case .home:
-            return .blue
-        case .office:
-            return .green
-        case .holiday:
-            return .orange
-        case .sick:
-            return .red
+        case .home: return .breezeHome
+        case .office: return .breezeOffice
+        case .holiday: return .breezeHoliday
+        case .sick: return .breezeSick
         }
     }
 
-    var backgroundColor: Color {
+    // Soft tinted background
+    var softColor: Color {
         switch self {
-        case .home:
-            return .blue.opacity(0.1)
-        case .office:
-            return .green.opacity(0.1)
-        case .holiday:
-            return .orange.opacity(0.1)
-        case .sick:
-            return .red.opacity(0.1)
+        case .home: return .breezeHomeSoft
+        case .office: return .breezeOfficeSoft
+        case .holiday: return .breezeHolidaySoft
+        case .sick: return .breezeSickSoft
         }
     }
+
+    // Darker tinted foreground for text on soft background
+    var inkColor: Color {
+        switch self {
+        case .home: return .breezeHomeInk
+        case .office: return .breezeOfficeInk
+        case .holiday: return .breezeHolidayInk
+        case .sick: return .breezeSickInk
+        }
+    }
+
+    var backgroundColor: Color { softColor }
 }

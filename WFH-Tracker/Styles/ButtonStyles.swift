@@ -1,19 +1,21 @@
 import SwiftUI
 
-// MARK: - Button Styles
+// MARK: - Breeze Button Styles
 
 struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.headline)
+            .font(.system(size: 16, weight: .heavy))
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .frame(height: 50)
             .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(.blue)
-                    .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+                LinearGradient.breezeBrandGrad
+                    .clipShape(Capsule())
             )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
+            .breezeShadowBrand()
             .accessibilityAddTraits(.isButton)
     }
 }
@@ -21,15 +23,18 @@ struct PrimaryButtonStyle: ButtonStyle {
 struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.headline)
-            .foregroundStyle(.blue)
+            .font(.system(size: 16, weight: .heavy))
+            .foregroundStyle(Color.breezeBrandInk)
             .frame(maxWidth: .infinity)
             .frame(height: 50)
             .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(.blue, lineWidth: 2)
-                    .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+                Capsule()
+                    .fill(Color.breezeSurface)
+                    .overlay(Capsule().strokeBorder(Color.breezeLineStrong, lineWidth: 1.5))
             )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
+            .breezeShadowSm()
             .accessibilityAddTraits(.isButton)
     }
 }
@@ -37,15 +42,12 @@ struct SecondaryButtonStyle: ButtonStyle {
 struct ClearButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.headline)
-            .foregroundStyle(.red)
+            .font(.system(size: 16, weight: .heavy))
+            .foregroundStyle(Color.breezeInkMuted)
             .frame(maxWidth: .infinity)
             .frame(height: 50)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(.red, lineWidth: 2)
-                    .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
             .accessibilityAddTraits(.isButton)
             .accessibilityHint("Removes all entered work hours for this week")
     }
@@ -54,15 +56,15 @@ struct ClearButtonStyle: ButtonStyle {
 struct AdvancedButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.subheadline)
-            .foregroundStyle(.blue)
+            .font(.system(size: 14, weight: .heavy))
+            .foregroundStyle(Color.breezeBrandInk)
             .frame(maxWidth: .infinity)
             .frame(height: 36)
             .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(.blue, lineWidth: 1)
-                    .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .fill(Color.breezeBrandSoft)
             )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
             .accessibilityAddTraits(.isButton)
             .accessibilityHint("Opens detailed entry for custom work hours")
     }

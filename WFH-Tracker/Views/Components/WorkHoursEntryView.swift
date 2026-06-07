@@ -10,168 +10,104 @@ struct WorkHoursEntryView: View {
     @EnvironmentObject var diContainer: DIContainer
     @State private var weeklyEntries: [Date: WorkDayEntry] = [:]
     @State private var showingAdvancedEntry: Date?
-    @State private var showingValidationError = false
-    @State private var validationMessage = ""
     @State private var isLoading = false
 
     private let calendar = Calendar.current
 
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                // Header
-                headerView
+        VStack(spacing: 0) {
+            // Grab handle
+            RoundedRectangle(cornerRadius: 3)
+                .fill(Color.breezeLineStrong)
+                .frame(width: 44, height: 5)
+                .padding(.top, 10)
+                .padding(.bottom, 16)
 
-                // Weekly Entry List
-                if isLoading {
-                    loadingView
-                } else {
-                    weeklyEntryList
-                }
+            // Title
+            Text("Log your week")
+                .font(.breezeDisplay(23))
+                .foregroundStyle(Color.breezeInk)
 
+            Text("Tap a type to log a full day · ⚙ for split days")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(Color.breezeInkMuted)
+                .padding(.top, 5)
+                .padding(.bottom, 14)
+
+            Divider()
+                .overlay(Color.breezeLine)
+
+            // Day rows
+            if isLoading {
                 Spacer()
-
-                // Action Buttons
-                actionButtons
-            }
-            .navigationTitle("Weekly Hours")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden()
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        onCancel()
+                ProgressView()
+                    .tint(Color.breezeBrand)
+                Spacer()
+            } else {
+                ScrollView {
+                    VStack(spacing: 9) {
+                        ForEach(weekDates, id: \.self) { date in
+                            CompactDayEntryRow(
+                                date: date,
+                                entry: weeklyEntries[date] ?? WorkDayEntry(),
+                                defaultHours: diContainer.settingsManager.notificationSettings.defaultHoursPerDay,
+                                onWorkTypeSelected: { selectWorkType($0, for: date) },
+                                onAdvancedTapped: { showingAdvancedEntry = date }
+                            )
+                        }
                     }
-                    .accessibilityHint("Cancels entry and returns to calendar")
-                }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        saveWorkDays()
-                    }
-                    .fontWeight(.semibold)
-                    .accessibilityHint("Saves all entered work hours")
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
                 }
             }
+
+            // Action buttons
+            HStack(spacing: 10) {
+                Button("Clear all") { weeklyEntries.removeAll() }
+                    .buttonStyle(ClearButtonStyle())
+                    .frame(maxWidth: .infinity)
+
+                Button("Save week") { saveWorkDays() }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 22)
+            .padding(.top, 8)
         }
-        .alert("Invalid Input", isPresented: $showingValidationError) {
-            Button("OK") { }
-        } message: {
-            Text(validationMessage)
-        }
+        .background(Color.breezeSurfaceSunken.ignoresSafeArea())
         .sheet(item: Binding<DateWrapper?>(
             get: { showingAdvancedEntry.map(DateWrapper.init) },
             set: { _ in showingAdvancedEntry = nil }
-        )) { dateWrapper in
-            advancedEntrySheet(for: dateWrapper.date)
+        )) { wrapper in
+            DayAdvancedEntryView(
+                date: wrapper.date,
+                existingEntry: weeklyEntries[wrapper.date],
+                onSave: { entry in
+                    weeklyEntries[wrapper.date] = entry
+                    showingAdvancedEntry = nil
+                },
+                onCancel: { showingAdvancedEntry = nil }
+            )
         }
-        .onAppear {
-            loadExistingData()
-        }
+        .onAppear { loadExistingData() }
     }
 
-    // MARK: - View Components
-
-    private var headerView: some View {
-        VStack(spacing: 8) {
-            Text("Week of \(weekStartDateString)")
-                .font(.headline)
-                .foregroundStyle(.primary)
-                .accessibilityAddTraits(.isHeader)
-
-            Text("Tap work types to quickly log hours, or use advanced entry for detailed tracking")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-        }
-        .padding(.vertical, 16)
-        .background(Color(.systemGray6).opacity(0.3))
-    }
-
-    private var loadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-                .scaleEffect(1.2)
-            Text("Loading...")
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var weeklyEntryList: some View {
-        ScrollView {
-            LazyVStack(spacing: 8) {
-                ForEach(weekDates, id: \.self) { date in
-                    CompactDayEntryRow(
-                        date: date,
-                        entry: weeklyEntries[date] ?? WorkDayEntry(),
-                        defaultHours: diContainer.settingsManager.notificationSettings.defaultHoursPerDay,
-                        onWorkTypeSelected: { workType in
-                            selectWorkTypeForDate(date: date, workType: workType)
-                        },
-                        onAdvancedTapped: {
-                            showingAdvancedEntry = date
-                        }
-                    )
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-        }
-    }
-
-    private var actionButtons: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 12) {
-                Button("Clear All") {
-                    clearAllEntries()
-                }
-                .buttonStyle(ClearButtonStyle())
-                .frame(maxWidth: .infinity)
-
-                Button("Save") {
-                    saveWorkDays()
-                }
-                .buttonStyle(PrimaryButtonStyle())
-                .frame(maxWidth: .infinity)
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.bottom, 16)
-    }
-
-    // MARK: - Helper Properties
+    // MARK: - Helpers
 
     private var weekDates: [Date] {
-        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: date)?.start ?? date
-        var dates: [Date] = []
-
-        for i in 0..<7 {
-            if let weekDate = calendar.date(byAdding: .day, value: i, to: startOfWeek) {
-                dates.append(weekDate)
-            }
-        }
-
-        return dates
+        guard let start = calendar.dateInterval(of: .weekOfYear, for: date)?.start else { return [] }
+        return (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: start) }
     }
-
-    private var weekStartDateString: String {
-        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: date)?.start ?? date
-        return DateFormatters.shortDate.string(from: startOfWeek)
-    }
-
-    // MARK: - Actions
 
     private func loadExistingData() {
         isLoading = true
-
         Task {
             await MainActor.run {
-                for weekDate in weekDates {
-                    if let workDay = existingWorkDays.first(where: { calendar.isDate($0.date, inSameDayAs: weekDate) }) {
-                        let entry = WorkDayEntry(from: workDay)
-                        weeklyEntries[weekDate] = entry
+                for d in weekDates {
+                    if let wd = existingWorkDays.first(where: { calendar.isDate($0.date, inSameDayAs: d) }) {
+                        weeklyEntries[d] = WorkDayEntry(from: wd)
                     }
                 }
                 isLoading = false
@@ -179,68 +115,30 @@ struct WorkHoursEntryView: View {
         }
     }
 
-    private func selectWorkTypeForDate(date: Date, workType: WorkType) {
-        let currentEntry = weeklyEntries[date] ?? WorkDayEntry()
-        var newEntry = currentEntry
-
-        if currentEntry.selectedWorkType == workType {
-            // Deselect if already selected
-            newEntry.clear()
+    private func selectWorkType(_ workType: WorkType, for date: Date) {
+        var entry = weeklyEntries[date] ?? WorkDayEntry()
+        if entry.selectedWorkType == workType {
+            entry.clear()
         } else {
-            // Clear all work types first, then set the selected one
-            newEntry.clear()
-            let defaultHours = diContainer.settingsManager.notificationSettings.defaultHoursPerDay
-            newEntry.setWorkType(workType, hours: defaultHours)
+            entry.clear()
+            entry.setWorkType(workType, hours: diContainer.settingsManager.notificationSettings.defaultHoursPerDay)
         }
-
-        weeklyEntries[date] = newEntry
-    }
-
-    private func clearAllEntries() {
-        weeklyEntries.removeAll()
+        weeklyEntries[date] = entry
     }
 
     private func saveWorkDays() {
-        isLoading = true
-
-        Task {
-            var workDaysToSave: [WorkDay] = []
-
-            for weekDate in weekDates {
-                let entry = weeklyEntries[weekDate] ?? WorkDayEntry()
-                let workDay = entry.toWorkDay(for: weekDate)
-                workDaysToSave.append(workDay)
-            }
-
-            onSave(workDaysToSave)
-        }
-    }
-
-    private func advancedEntrySheet(for date: Date) -> some View {
-        DayAdvancedEntryView(
-            date: date,
-            existingEntry: weeklyEntries[date],
-            onSave: { entry in
-                weeklyEntries[date] = entry
-                showingAdvancedEntry = nil
-            },
-            onCancel: {
-                showingAdvancedEntry = nil
-            }
-        )
+        let workDays = weekDates.map { (weeklyEntries[$0] ?? WorkDayEntry()).toWorkDay(for: $0) }
+        onSave(workDays)
     }
 }
 
 #Preview {
-    let sampleDate = Date()
-    let sampleWorkDay = WorkDay(date: sampleDate, workEntries: [.home: 8.0])
-
     WorkHoursEntryView(
-        date: sampleDate,
-        existingWorkDay: sampleWorkDay,
-        existingWorkDays: [sampleWorkDay],
+        date: Date(),
+        existingWorkDay: nil,
+        existingWorkDays: [],
         onSave: { _ in },
-        onCancel: { }
+        onCancel: {}
     )
     .environmentObject(DIContainer.shared)
 }

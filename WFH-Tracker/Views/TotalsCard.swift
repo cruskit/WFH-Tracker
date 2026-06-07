@@ -1,75 +1,81 @@
 import SwiftUI
-import OSLog
 
 struct TotalsCard: View {
     let title: String
     let totals: WorkTotals
-    
+    var isWarm: Bool = false
+
+    private let types: [WorkType] = WorkType.allCases
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 0) {
             Text(title)
-                .font(.headline)
-                .fontWeight(.semibold)
-                .foregroundStyle(.primary)
-                .accessibilityAddTraits(.isHeader)
-            
-            VStack(spacing: 8) {
-                totalsRow("Home", hours: totals.homeHours, color: .blue)
+                .font(.system(size: 12.5, weight: .heavy))
+                .foregroundStyle(.white.opacity(0.92))
 
-                totalsRow("Office", hours: totals.officeHours, color: .green)
-
-                totalsRow("Holiday", hours: totals.holidayHours, color: .orange)
-
-                totalsRow("Sick", hours: totals.sickHours, color: .red)
+            LazyVGrid(
+                columns: [GridItem(.flexible()), GridItem(.flexible())],
+                spacing: 12
+            ) {
+                ForEach(types, id: \.self) { type in
+                    let hrs = totals.hours(for: type)
+                    HStack(alignment: .lastTextBaseline, spacing: 4) {
+                        Text(type.icon)
+                            .font(.system(size: 14))
+                        Text(formatHours(hrs))
+                            .font(.breezeDisplay(19))
+                            .foregroundStyle(.white)
+                        Text("h")
+                            .font(.system(size: 11, weight: .heavy))
+                            .foregroundStyle(.white.opacity(0.8))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .opacity(hrs > 0 ? 1.0 : 0.42)
+                }
             }
+            .padding(.top, 13)
         }
         .padding(16)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemGray6))
+            Group {
+                if isWarm { LinearGradient.breezeWarmGrad }
+                else { LinearGradient.breezeBrandGrad }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         )
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("\(title) work summary")
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .if(isWarm) { $0.breezeShadowWarm() }
+        .if(!isWarm) { $0.breezeShadowBrand() }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title): \(Int(totals.totalHours)) total hours")
     }
 
-    // MARK: - Helper Views
+    private func formatHours(_ h: Double) -> String {
+        h.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(h))" : String(format: "%.1f", h)
+    }
+}
 
+// MARK: - Conditional modifier helper
+
+extension View {
     @ViewBuilder
-    private func totalsRow(_ label: String, hours: Double, color: Color) -> some View {
-        HStack {
-            Text("\(label):")
-                .foregroundStyle(.secondary)
-
-            Spacer()
-
-            if hours > 0 {
-                Text("\(Int(round(hours / 8.0)))d")
-                    .fontWeight(.medium)
-                    .foregroundStyle(.primary)
-                + Text(" (\(String(format: "%.0fh", hours)))")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                Text("0d (0h)")
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(label): \(Int(round(hours / 8.0))) days, \(Int(hours)) hours")
+    func `if`<Transform: View>(_ condition: Bool, transform: (Self) -> Transform) -> some View {
+        if condition { transform(self) } else { self }
     }
 }
 
 #Preview {
-    VStack(spacing: 16) {
+    HStack(spacing: 11) {
         TotalsCard(
-            title: "Monthly Totals",
-            totals: WorkTotals(homeHours: 45.5, officeHours: 32.0, holidayHours: 16.0, sickHours: 8.0)
+            title: "January hours",
+            totals: WorkTotals(homeHours: 74, officeHours: 54, holidayHours: 16, sickHours: 8)
         )
-
         TotalsCard(
-            title: "Yearly Totals",
-            totals: WorkTotals(homeHours: 520.0, officeHours: 380.5, holidayHours: 120.0, sickHours: 40.0)
+            title: "FY 2024–25 hours",
+            totals: WorkTotals(homeHours: 74, officeHours: 54, holidayHours: 16, sickHours: 8),
+            isWarm: true
         )
     }
-    .padding()
-} 
+    .padding(16)
+    .background(Color.breezeBackground)
+}

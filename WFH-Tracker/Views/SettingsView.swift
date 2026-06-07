@@ -8,51 +8,204 @@ struct SettingsView: View {
     @State private var showingErrorAlert = false
     @State private var permissionStatus: UNAuthorizationStatus = .notDetermined
 
+    private var settings: NotificationSettings { diContainer.settingsManager.notificationSettings }
     private let weekdays = Calendar.current.weekdaySymbols
 
     var body: some View {
         NavigationView {
-            Form {
-                // Notifications Section
-                notificationSection
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
 
-                // Schedule Section (only visible when notifications are enabled)
-                if diContainer.settingsManager.notificationSettings.isEnabled {
-                    scheduleSection
+                    // CALENDAR section
+                    sectionHeader("Calendar")
+
+                    listCard {
+                        // Show weekends
+                        settingsRow(
+                            icon: "📅", iconBg: Color.breezeOfficeSoft,
+                            title: "Show weekends",
+                            subtitle: "Turn off for weekdays only (Mon–Fri)"
+                        ) {
+                            Toggle("", isOn: Binding(
+                                get: { settings.displayWeekends },
+                                set: { diContainer.settingsManager.updateDisplayWeekends($0) }
+                            ))
+                            .labelsHidden()
+                            .tint(Color.breezeOffice)
+                        }
+
+                        rowDivider()
+
+                        // Default hours
+                        settingsRow(
+                            icon: "⏰", iconBg: Color.breezeHomeSoft,
+                            title: "Default hours",
+                            subtitle: "Filled in when you tap a work type"
+                        ) {
+                            Stepper(value: Binding(
+                                get: { settings.defaultHoursPerDay },
+                                set: { diContainer.settingsManager.updateDefaultHours($0) }
+                            ), in: 1.0...12.0, step: 0.5) {
+                                Text(String(format: "%.1f h", settings.defaultHoursPerDay))
+                                    .font(.system(size: 14.5, weight: .heavy))
+                                    .foregroundStyle(Color.breezeInkMuted)
+                            }
+                            .labelsHidden()
+                        }
+                    }
+
+                    // REMINDERS section
+                    sectionHeader("Reminders")
+
+                    listCard {
+                        // Weekly nudge toggle
+                        settingsRow(
+                            icon: "🔔", iconBg: Color.breezeHolidaySoft,
+                            title: "Weekly nudge",
+                            subtitle: "A friendly reminder to log"
+                        ) {
+                            Toggle("", isOn: Binding(
+                                get: { settings.isEnabled },
+                                set: { newValue in
+                                    if newValue && permissionStatus != .authorized {
+                                        requestAndEnable()
+                                    } else {
+                                        diContainer.settingsManager.updateNotificationEnabled(newValue)
+                                    }
+                                }
+                            ))
+                            .labelsHidden()
+                            .tint(Color.breezeOffice)
+                        }
+
+                        if settings.isEnabled {
+                            rowDivider()
+
+                            // Remind me on
+                            settingsRow(
+                                icon: "📆", iconBg: Color.breezeBrandSoft,
+                                title: "Remind me on",
+                                subtitle: nil
+                            ) {
+                                Picker("", selection: Binding(
+                                    get: { settings.dayOfWeek },
+                                    set: { diContainer.settingsManager.updateNotificationDay($0) }
+                                )) {
+                                    ForEach(1...7, id: \.self) { Text(weekdays[$0 - 1]).tag($0) }
+                                }
+                                .pickerStyle(.menu)
+                                .tint(Color.breezeInkMuted)
+                            }
+
+                            rowDivider()
+
+                            // At (time)
+                            settingsRow(
+                                icon: "🕓", iconBg: Color.breezeSickSoft,
+                                title: "At",
+                                subtitle: nil
+                            ) {
+                                DatePicker("", selection: Binding(
+                                    get: {
+                                        var comps = DateComponents()
+                                        comps.hour = settings.hour
+                                        comps.minute = settings.minute
+                                        return Calendar.current.date(from: comps) ?? Date()
+                                    },
+                                    set: { d in
+                                        let comps = Calendar.current.dateComponents([.hour, .minute], from: d)
+                                        diContainer.settingsManager.updateNotificationTime(
+                                            hour: comps.hour ?? 16,
+                                            minute: comps.minute ?? 0
+                                        )
+                                    }
+                                ), displayedComponents: .hourAndMinute)
+                                .labelsHidden()
+                                .datePickerStyle(.compact)
+                                .tint(Color.breezeBrand)
+                            }
+                        }
+                    }
+
+                    if settings.isEnabled {
+                        Text("We'll only nudge you if you haven't logged any hours that week.")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(Color.breezeInkFaint)
+                            .padding(.horizontal, 24)
+                            .padding(.top, 9)
+                    }
+
+                    // Reset card
+                    listCard {
+                        Button {
+                            diContainer.settingsManager.resetToDefaults()
+                            Logger.ui.logInfo("Settings reset to defaults", context: "SettingsView")
+                        } label: {
+                            HStack(spacing: 13) {
+                                Text("↺")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .frame(width: 36, height: 36)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                            .fill(Color.breezeSurfaceSunken)
+                                    )
+                                Text("Reset to defaults")
+                                    .font(.system(size: 15.5, weight: .heavy))
+                                    .foregroundStyle(Color.breezeBrandInk)
+                                Spacer()
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 14)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.top, 22)
+
+                    #if DEBUG
+                    listCard {
+                        Button {
+                            Task { await NotificationService.shared.scheduleTestNotification() }
+                        } label: {
+                            HStack(spacing: 13) {
+                                Image(systemName: "testtube.2")
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(Color.breezeSickInk)
+                                    .frame(width: 36, height: 36)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                            .fill(Color.breezeSickSoft)
+                                    )
+                                Text("Send Test Notification")
+                                    .font(.system(size: 15.5, weight: .heavy))
+                                    .foregroundStyle(Color.breezeSickInk)
+                                Spacer()
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 14)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.top, 12)
+                    #endif
+
+                    Spacer(minLength: 32)
                 }
-
-                // Work Hours Section
-                workHoursSection
-
-                // Calendar Display Section
-                calendarSection
-
-                // Actions Section
-                actionsSection
-
-                // Debug Section (for development)
-                #if DEBUG
-                debugSection
-                #endif
             }
+            .background(Color.breezeBackground.ignoresSafeArea())
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
-                checkPermissionStatus()
+                checkPermission()
                 Logger.ui.logInfo("Settings view appeared", context: "SettingsView")
             }
             .alert("Enable Notifications", isPresented: $showingPermissionAlert) {
-                Button("Settings") {
-                    openAppSettings()
-                }
-                Button("Cancel", role: .cancel) { }
+                Button("Open Settings") { openAppSettings() }
+                Button("Cancel", role: .cancel) {}
             } message: {
                 Text("To receive work hour reminders, please enable notifications in Settings.")
             }
             .alert("Error", isPresented: $showingErrorAlert) {
-                Button("OK") {
-                    diContainer.settingsManager.clearError()
-                }
+                Button("OK") { diContainer.settingsManager.clearError() }
             } message: {
                 Text(diContainer.settingsManager.lastError?.localizedDescription ?? "An unknown error occurred")
             }
@@ -62,270 +215,100 @@ struct SettingsView: View {
         }
     }
 
-    // MARK: - View Sections
+    // MARK: - Layout helpers
 
-    private var notificationSection: some View {
-        Section {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Image(systemName: "bell.fill")
-                        .foregroundStyle(.blue)
-                        .frame(width: 24)
-
-                    Text("Entry Reminders")
-
-                    Spacer()
-
-                    Toggle("", isOn: Binding(
-                        get: { diContainer.settingsManager.notificationSettings.isEnabled },
-                        set: { newValue in
-                            if newValue && permissionStatus != .authorized {
-                                requestPermissionAndEnable()
-                            } else {
-                                diContainer.settingsManager.updateNotificationEnabled(newValue)
-                            }
-                        }
-                    ))
-                    .accessibilityLabel("Enable entry reminders")
-                    .accessibilityHint("Toggles weekly work hour entry reminders")
-                }
-
-                if diContainer.settingsManager.notificationSettings.isEnabled {
-                    Text("Get reminded to log your work hours")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text("Enable to receive weekly reminders")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .padding(.vertical, 4)
-        } header: {
-            Text("Notifications")
-        } footer: {
-            if diContainer.settingsManager.notificationSettings.isEnabled {
-                Text("You'll receive a reminder on \(diContainer.settingsManager.notificationSettings.dayName) at \(diContainer.settingsManager.notificationSettings.timeString) if you haven't logged any hours for the week.")
-            }
-        }
+    private func sectionHeader(_ text: String) -> some View {
+        Text(text.uppercased())
+            .font(.system(size: 12, weight: .heavy))
+            .foregroundStyle(Color.breezeInkFaint)
+            .tracking(0.8)
+            .padding(.horizontal, 24)
+            .padding(.top, 22)
+            .padding(.bottom, 9)
     }
 
-    private var scheduleSection: some View {
-        Section {
-            // Day of Week Picker
-            HStack {
-                Image(systemName: "calendar")
-                    .foregroundStyle(.green)
-                    .frame(width: 24)
+    private func listCard<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        VStack(spacing: 0) { content() }
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color.breezeSurface)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .strokeBorder(Color.breezeLine, lineWidth: 1)
+                    )
+            )
+            .breezeShadowSm()
+            .padding(.horizontal, 18)
+    }
 
-                Text("Day of Week")
-                    .font(.body)
-
-                Spacer()
-
-                Picker("", selection: Binding(
-                    get: { diContainer.settingsManager.notificationSettings.dayOfWeek },
-                    set: { diContainer.settingsManager.updateNotificationDay($0) }
-                )) {
-                    ForEach(1...7, id: \.self) { dayIndex in
-                        Text(weekdays[dayIndex - 1])
-                            .tag(dayIndex)
-                    }
-                }
-                .pickerStyle(.menu)
-                .tint(.blue)
-                .accessibilityLabel("Reminder day of week")
-            }
-            .padding(.vertical, 4)
-
-            // Time Picker
-            HStack {
-                Image(systemName: "clock")
-                    .foregroundStyle(.orange)
-                    .frame(width: 24)
-
-                Text("Time")
-                    .font(.body)
-
-                Spacer()
-
-                DatePicker(
-                    "",
-                    selection: Binding(
-                        get: {
-                            let calendar = Calendar.current
-                            var components = DateComponents()
-                            components.hour = diContainer.settingsManager.notificationSettings.hour
-                            components.minute = diContainer.settingsManager.notificationSettings.minute
-                            return calendar.date(from: components) ?? Date()
-                        },
-                        set: { newDate in
-                            let calendar = Calendar.current
-                            let components = calendar.dateComponents([.hour, .minute], from: newDate)
-                            diContainer.settingsManager.updateNotificationTime(
-                                hour: components.hour ?? 16,
-                                minute: components.minute ?? 0
-                            )
-                        }
-                    ),
-                    displayedComponents: .hourAndMinute
+    private func settingsRow<Control: View>(
+        icon: String,
+        iconBg: Color,
+        title: String,
+        subtitle: String?,
+        @ViewBuilder control: () -> Control
+    ) -> some View {
+        HStack(spacing: 13) {
+            Text(icon)
+                .font(.system(size: 16))
+                .frame(width: 36, height: 36)
+                .background(
+                    RoundedRectangle(cornerRadius: 11, style: .continuous).fill(iconBg)
                 )
-                .labelsHidden()
-                .datePickerStyle(.compact)
-                .accessibilityLabel("Reminder time")
-            }
-            .padding(.vertical, 4)
 
-        } header: {
-            Text("Reminder Schedule")
-        } footer: {
-            if let nextDate = diContainer.settingsManager.nextScheduledNotification {
-                Text("Next reminder: \(nextDate, formatter: DateFormatters.nextReminder)")
-            }
-        }
-    }
-
-    private var workHoursSection: some View {
-        Section {
-            HStack {
-                Image(systemName: "clock.fill")
-                    .foregroundStyle(.green)
-                    .frame(width: 24)
-
-                Text("Default Hours: ")
-                    .font(.body)
-
-                Spacer()
-
-                Stepper(value: Binding(
-                    get: { diContainer.settingsManager.notificationSettings.defaultHoursPerDay },
-                    set: { diContainer.settingsManager.updateDefaultHours($0) }
-                ), in: 1.0...12.0, step: 0.1) {
-                    Text(String(format: "%.1f", diContainer.settingsManager.notificationSettings.defaultHoursPerDay))
-                        .foregroundStyle(.primary)
-                        .fontWeight(.medium)
-                }
-                .accessibilityLabel("Default hours per day")
-                .accessibilityValue("\(diContainer.settingsManager.notificationSettings.defaultHoursPerDay, specifier: "%.1f") hours")
-            }
-            .padding(.vertical, 4)
-        } header: {
-            Text("Work Hours")
-        } footer: {
-            Text("Default number of hours used when selecting a work type for a day. You can still use advanced entry for custom hours.")
-        }
-    }
-
-    private var calendarSection: some View {
-        Section {
-            HStack {
-                Image(systemName: "calendar")
-                    .foregroundStyle(.blue)
-                    .frame(width: 24)
-
-                Text("Show weekends")
-                    .font(.body)
-
-                Spacer()
-
-                Toggle("", isOn: Binding(
-                    get: { diContainer.settingsManager.notificationSettings.displayWeekends },
-                    set: { diContainer.settingsManager.updateDisplayWeekends($0) }
-                ))
-                .accessibilityLabel("Show weekends in calendar")
-                .accessibilityHint("Toggles weekend display in calendar view")
-            }
-            .padding(.vertical, 4)
-        } header: {
-            Text("Calendar")
-        } footer: {
-            Text("Show Saturday and Sunday in the calendar view. When disabled, only Monday through Friday are displayed.")
-        }
-    }
-
-    private var actionsSection: some View {
-        Section {
-            Button(action: {
-                diContainer.settingsManager.resetToDefaults()
-                Logger.ui.logInfo("Settings reset to defaults", context: "SettingsView")
-            }) {
-                HStack {
-                    Image(systemName: "arrow.clockwise")
-                        .foregroundStyle(.blue)
-                        .frame(width: 24)
-                    Text("Reset to Defaults")
-                        .foregroundStyle(.blue)
-                }
-                .accessibilityLabel("Reset all settings to default values")
-            }
-            .padding(.vertical, 4)
-        } footer: {
-            Text("Reset notification settings to default values (Friday at 4:00 PM, disabled).")
-        }
-    }
-
-    #if DEBUG
-    private var debugSection: some View {
-        Section {
-            Button(action: {
-                Task {
-                    await NotificationService.shared.scheduleTestNotification()
-                }
-            }) {
-                HStack {
-                    Image(systemName: "testtube.2")
-                        .foregroundStyle(.purple)
-                        .frame(width: 24)
-                    Text("Send Test Notification")
-                        .foregroundStyle(.purple)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 15.5, weight: .heavy))
+                    .foregroundStyle(Color.breezeInk)
+                if let sub = subtitle {
+                    Text(sub)
+                        .font(.system(size: 12.5, weight: .bold))
+                        .foregroundStyle(Color.breezeInkFaint)
                 }
             }
-            .padding(.vertical, 4)
-            .accessibilityLabel("Send test notification")
-            .accessibilityHint("Sends a test notification in 5 seconds")
-        } header: {
-            Text("Debug")
-        } footer: {
-            Text("Development only: Send a test notification in 5 seconds.")
+
+            Spacer()
+
+            control()
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
     }
-    #endif
 
-    // MARK: - Helper Methods
+    private func rowDivider() -> some View {
+        Divider().overlay(Color.breezeLine).padding(.leading, 65)
+    }
 
-    private func requestPermissionAndEnable() {
+    // MARK: - Permission handling
+
+    private func requestAndEnable() {
         Task {
             let granted = await diContainer.settingsManager.requestNotificationPermission()
             await MainActor.run {
                 if granted {
                     diContainer.settingsManager.updateNotificationEnabled(true)
                     permissionStatus = .authorized
-                    Logger.notifications.logInfo("Notification permission granted and enabled", context: "SettingsView")
                 } else {
                     showingPermissionAlert = true
-                    Logger.notifications.logWarning("Notification permission denied", context: "SettingsView")
                 }
             }
         }
     }
 
-    private func checkPermissionStatus() {
+    private func checkPermission() {
         Task {
             let status = await diContainer.settingsManager.checkNotificationPermission()
-            await MainActor.run {
-                permissionStatus = status
-            }
+            await MainActor.run { permissionStatus = status }
         }
     }
 
     private func openAppSettings() {
-        if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
-            UIApplication.shared.open(settingsUrl)
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
         }
     }
 }
 
 #Preview {
-    SettingsView()
-        .environmentObject(DIContainer.shared)
+    SettingsView().environmentObject(DIContainer.shared)
 }

@@ -7,22 +7,17 @@ struct CalendarView: View {
     let onDayTap: (Date) -> Void
 
     private var weeks: [[Date]] {
-        if displayWeekends {
-            return calendarMonth.weeks
-        } else {
-            return calendarMonth.weekdaysOnly(from: calendarMonth.weeks)
-        }
+        displayWeekends ? calendarMonth.weeks : calendarMonth.weekdaysOnly(from: calendarMonth.weeks)
     }
-    
-    var body: some View {
-        LazyVStack(spacing: 8) {
-            ForEach(Array(weeks.enumerated()), id: \.offset) { weekIndex, week in
-                HStack(spacing: 0) {
-                    ForEach(week, id: \.self) { date in
-                        let workDay = workDays.first { workDay in
-                            Calendar.current.isDate(workDay.date, inSameDayAs: date)
-                        }
 
+    var body: some View {
+        LazyVStack(spacing: 7) {
+            ForEach(Array(weeks.enumerated()), id: \.offset) { _, week in
+                HStack(spacing: 7) {
+                    ForEach(week, id: \.self) { date in
+                        let workDay = workDays.first {
+                            Calendar.current.isDate($0.date, inSameDayAs: date)
+                        }
                         DayCell(
                             date: date,
                             workDay: workDay,
@@ -32,22 +27,18 @@ struct CalendarView: View {
                         )
                     }
                 }
-                .padding(.horizontal, 20)
             }
         }
+        .padding(.horizontal, 18)
     }
 }
 
 #Preview {
-    let sampleWorkDays = [
-        WorkDay(date: Date(), homeHours: 4.5, officeHours: 3.0),
-        WorkDay(date: Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date(), homeHours: 8.0, officeHours: nil)
-    ]
-    
     CalendarView(
         calendarMonth: CalendarMonth(),
-        workDays: sampleWorkDays,
+        workDays: [WorkDay(date: Date(), workEntries: [.home: 8])],
         displayWeekends: true,
         onDayTap: { _ in }
     )
-} 
+    .background(Color.breezeBackground)
+}

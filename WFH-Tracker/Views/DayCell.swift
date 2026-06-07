@@ -9,151 +9,106 @@ struct DayCell: View {
 
     private let calendar = Calendar.current
 
-    private var cellWidth: CGFloat {
-        displayWeekends ? 50 : 70
+    private var dayNumber: Int {
+        calendar.component(.day, from: date)
     }
 
     private var isToday: Bool {
         calendar.isDateInToday(date)
     }
-    
+
+    private var activeTypes: [WorkType] {
+        workDay?.activeWorkTypes ?? []
+    }
+
     var body: some View {
         Button(action: onTap) {
-            VStack(spacing: 2) {
-                // Date header (always at the top)
-                Text("\(calendar.component(.day, from: date))")
-                    .font(.system(size: 16, weight: isToday ? .bold : .medium))
-                    .foregroundColor(isToday ? .white : (isCurrentMonth ? .primary : .secondary))
+            ZStack(alignment: .topLeading) {
+                cellBackground
+
+                // Day number
+                Text("\(dayNumber)")
+                    .font(.breezeDisplay(11))
+                    .foregroundStyle(numberColor)
                     .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(isToday ? Color.blue : Color.clear)
-                    )
-                
-                // Work type icons (if any)
-                if let workDay = workDay, workDay.hasData {
-                    WorkTypeIconsView(
-                        workTypes: workDay.activeWorkTypes,
-                        cellWidth: cellWidth
-                    )
-                }
-                Spacer() // Always push content to the top
+                    .padding(.top, 5)
+
+                // Centred emoji content
+                emojiContent
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(.top, 8)
             }
-            .frame(width: cellWidth, height: 60)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(.systemGray6))
-                    .opacity(workDay?.hasData == true ? 0.3 : 0.1)
+            .aspectRatio(CGSize(width: 1, height: 1.04), contentMode: .fit)
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(borderColor, lineWidth: isToday ? 2.5 : 1.5)
             )
+            .opacity(isCurrentMonth ? 1.0 : 0.32)
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel)
     }
-    
+
+    // MARK: - Sub-views
+
+    @ViewBuilder
+    private var cellBackground: some View {
+        switch activeTypes.count {
+        case 0:
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.breezeSurfaceSoft)
+        case 1:
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(activeTypes[0].softColor)
+        default:
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.breezeSurface)
+        }
+    }
+
+    @ViewBuilder
+    private var emojiContent: some View {
+        if activeTypes.count == 1 {
+            Text(activeTypes[0].icon)
+                .font(.system(size: 17))
+        } else if activeTypes.count > 1 {
+            HStack(spacing: 1) {
+                ForEach(activeTypes, id: \.self) { type in
+                    Text(type.icon)
+                        .font(.system(size: 11))
+                }
+            }
+        }
+    }
+
+    // MARK: - Computed colours
+
+    private var borderColor: Color {
+        if isToday { return .breezeBrand }
+        if activeTypes.count == 1 { return activeTypes[0].color }
+        return .breezeLine
+    }
+
+    private var numberColor: Color {
+        if activeTypes.count == 1 { return activeTypes[0].inkColor }
+        return .breezeInkFaint
+    }
+
+    private var accessibilityLabel: String {
+        guard !activeTypes.isEmpty else { return "\(dayNumber)" }
+        return "\(dayNumber): \(activeTypes.map(\.displayName).joined(separator: " and "))"
+    }
 }
 
 #Preview {
-    HStack {
-        DayCell(
-            date: Date(),
-            workDay: WorkDay(date: Date(), homeHours: 4.5, officeHours: 3.0),
-            isCurrentMonth: true,
-            displayWeekends: true,
-            onTap: {}
-        )
-
-        DayCell(
-            date: Date(),
-            workDay: WorkDay(date: Date(), homeHours: 8.0, officeHours: 0.0),
-            isCurrentMonth: true,
-            displayWeekends: true,
-            onTap: {}
-        )
-
-        DayCell(
-            date: Date(),
-            workDay: WorkDay(date: Date(), homeHours: 0.0, officeHours: 8.0),
-            isCurrentMonth: true,
-            displayWeekends: true,
-            onTap: {}
-        )
-
-        DayCell(
-            date: Date(),
-            workDay: nil,
-            isCurrentMonth: true,
-            displayWeekends: false,
-            onTap: {}
-        )
-
-        DayCell(
-            date: Date(),
-            workDay: nil,
-            isCurrentMonth: false,
-            displayWeekends: false,
-            onTap: {}
-        )
+    HStack(spacing: 7) {
+        DayCell(date: Date(), workDay: nil, isCurrentMonth: true, displayWeekends: true, onTap: {})
+        DayCell(date: Date(), workDay: WorkDay(date: Date(), workEntries: [.home: 8]), isCurrentMonth: true, displayWeekends: true, onTap: {})
+        DayCell(date: Date(), workDay: WorkDay(date: Date(), workEntries: [.office: 8]), isCurrentMonth: true, displayWeekends: true, onTap: {})
+        DayCell(date: Date(), workDay: WorkDay(date: Date(), workEntries: [.home: 4, .office: 4]), isCurrentMonth: true, displayWeekends: true, onTap: {})
+        DayCell(date: Date(), workDay: nil, isCurrentMonth: false, displayWeekends: true, onTap: {})
     }
     .padding()
+    .background(Color.breezeBackground)
 }
-
-// MARK: - Work Type Icons Component
-
-struct WorkTypeIconsView: View {
-    let workTypes: [WorkType]
-    let cellWidth: CGFloat
-
-    var body: some View {
-        if workTypes.count == 1 {
-            // Single large icon
-            Text(workTypes[0].icon)
-                .font(.system(size: 20))
-        } else if workTypes.count == 2 {
-            // Two icons arranged diagonally
-            ZStack {
-                Text(workTypes[0].icon)
-                    .font(.system(size: 13))
-                    .position(x: cellWidth * 0.3, y: 10)
-                Text(workTypes[1].icon)
-                    .font(.system(size: 13))
-                    .position(x: cellWidth * 0.6, y: 20)
-            }
-            .frame(width: cellWidth, height: 24)
-        } else if workTypes.count == 3 {
-            // Three icons in triangular arrangement
-            ZStack {
-                Text(workTypes[0].icon)
-                    .font(.system(size: 11))
-                    .position(x: cellWidth * 0.5, y: 8)
-                Text(workTypes[1].icon)
-                    .font(.system(size: 11))
-                    .position(x: cellWidth * 0.3, y: 18)
-                Text(workTypes[2].icon)
-                    .font(.system(size: 11))
-                    .position(x: cellWidth * 0.7, y: 18)
-            }
-            .frame(width: cellWidth, height: 24)
-        } else if workTypes.count >= 4 {
-            // Four icons in 2x2 grid
-            VStack(spacing: 2) {
-                HStack(spacing: 2) {
-                    Text(workTypes[0].icon)
-                        .font(.system(size: 10))
-                    Text(workTypes[1].icon)
-                        .font(.system(size: 10))
-                }
-                HStack(spacing: 2) {
-                    Text(workTypes[2].icon)
-                        .font(.system(size: 10))
-                    if workTypes.count > 3 {
-                        Text(workTypes[3].icon)
-                            .font(.system(size: 10))
-                    } else {
-                        Spacer().frame(width: 12, height: 12)
-                    }
-                }
-            }
-            .frame(width: cellWidth, height: 24)
-        }
-    }
-} 

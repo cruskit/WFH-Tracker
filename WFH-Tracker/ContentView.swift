@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  WFH-Tracker
-//
-//  Created by Paul Ruskin on 29/6/2025.
-//
-
 import SwiftUI
 import OSLog
 
@@ -13,35 +6,52 @@ struct ContentView: View {
     @EnvironmentObject var appState: AppState
     @State private var selectedFinancialYear: FinancialYear?
 
+    init() {
+        // Style the tab bar to match Breeze
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = UIColor(Color.breezeSurface)
+        appearance.shadowColor = UIColor(Color.breezeLine)
+
+        let normal = UITabBarItemAppearance()
+        normal.normal.titleTextAttributes = [.foregroundColor: UIColor(Color.breezeInkFaint)]
+        normal.selected.titleTextAttributes = [.foregroundColor: UIColor(Color.breezeBrand)]
+        normal.normal.iconColor = UIColor(Color.breezeInkFaint)
+        normal.selected.iconColor = UIColor(Color.breezeBrand)
+        appearance.stackedLayoutAppearance = normal
+        appearance.inlineLayoutAppearance = normal
+        appearance.compactInlineLayoutAppearance = normal
+
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
+    }
+
     var body: some View {
         TabView {
             LogView()
                 .tabItem {
-                    Image(systemName: "calendar")
-                    Text("Log")
+                    Label("Log", systemImage: "calendar")
                 }
                 .accessibilityLabel("Work hours log tab")
 
             ExportView(selectedYear: $selectedFinancialYear)
                 .tabItem {
-                    Image(systemName: "square.and.arrow.up")
-                    Text("Export")
+                    Label("Export", systemImage: "square.and.arrow.up")
                 }
                 .accessibilityLabel("Export data tab")
 
             SettingsView()
                 .tabItem {
-                    Image(systemName: "gear")
-                    Text("Settings")
+                    Label("Settings", systemImage: "gearshape")
                 }
                 .accessibilityLabel("Settings tab")
         }
+        .tint(Color.breezeBrand)
         .onAppear(perform: setupInitialFinancialYear)
         .onChange(of: diContainer.calendarStateManager.financialYears) { _ in
             setupInitialFinancialYear()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("OpenCurrentWeekEntry"))) { _ in
-            // Trigger app state to open current week entry
             appState.openCurrentWeekEntry()
         }
     }
@@ -52,9 +62,10 @@ struct ContentView: View {
             Logger.ui.logInfo("Initial financial year set", context: "ContentView")
         }
     }
-
 }
 
 #Preview {
     ContentView()
+        .environmentObject(DIContainer.shared)
+        .environmentObject(AppState())
 }

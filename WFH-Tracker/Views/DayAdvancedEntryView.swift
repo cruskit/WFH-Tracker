@@ -6,216 +6,176 @@ struct DayAdvancedEntryView: View {
     let onSave: (WorkDayEntry) -> Void
     let onCancel: () -> Void
 
-    @State private var workEntries: [WorkType: String] = [:]
-    @State private var showingValidationError = false
-    @State private var validationMessage = ""
+    @State private var hours: [WorkType: Double] = [:]
 
     private let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .full
-        return formatter
+        let f = DateFormatter()
+        f.dateStyle = .full
+        return f
     }()
 
     var body: some View {
-        NavigationView {
-            VStack(spacing: 20) {
-                // Header
-                VStack(spacing: 8) {
-                    Text("Advanced Entry")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
+        VStack(spacing: 0) {
+            // Grab handle
+            RoundedRectangle(cornerRadius: 3)
+                .fill(Color.breezeLineStrong)
+                .frame(width: 44, height: 5)
+                .padding(.top, 10)
+                .padding(.bottom, 16)
 
-                    Text(dateFormatter.string(from: date))
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+            Text("Split your day")
+                .font(.breezeDisplay(23))
+                .foregroundStyle(Color.breezeInk)
+
+            Text(dateFormatter.string(from: date))
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(Color.breezeInkMuted)
+                .padding(.top, 4)
+                .padding(.bottom, 14)
+
+            ScrollView {
+                VStack(spacing: 10) {
+                    ForEach(WorkType.allCases, id: \.self) { type in
+                        advancedRow(for: type)
+                    }
+
+                    // Day total
+                    HStack {
+                        Text("Day total")
+                            .font(.system(size: 15, weight: .heavy))
+                            .foregroundStyle(Color.breezeBrandInk)
+                        Spacer()
+                        Text(String(format: "%.1f h", totalHours))
+                            .font(.breezeDisplay(22))
+                            .foregroundStyle(Color.breezeBrandInk)
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(Color.breezeBrandSoft)
+                    )
+                    .padding(.top, 4)
                 }
-                .padding(.top, 16)
+                .padding(.horizontal, 18)
+                .padding(.bottom, 12)
+            }
 
-                // Hour Entry Fields
-                VStack(spacing: 16) {
-                    ForEach(WorkType.allCases, id: \.self) { workType in
-                        WorkTypeEntryRow(
-                            workType: workType,
-                            hours: workEntries[workType] ?? "",
-                            onHoursChanged: { newValue in
-                                workEntries[workType] = newValue
-                            }
-                        )
-                    }
-                }
-                .padding(.horizontal, 20)
-
-                // Summary
-                if totalHours > 0 {
-                    VStack(spacing: 4) {
-                        Text("Total: \(String(format: "%.1f", totalHours)) hours")
-                            .font(.headline)
-                            .foregroundColor(.primary)
-
-                        if totalHours > 24 {
-                            Text("⚠️ Total exceeds 24 hours")
-                                .font(.caption)
-                                .foregroundColor(.red)
-                        }
-                    }
-                    .padding(.top, 8)
-                }
-
-                Spacer()
-
-                // Action Buttons
-                VStack(spacing: 12) {
-                    Button("Save") {
-                        saveEntry()
-                    }
-                    .buttonStyle(PrimaryButtonStyle())
-                    .disabled(!isValidInput)
-
-                    Button("Cancel") {
-                        onCancel()
-                    }
+            HStack(spacing: 10) {
+                Button("Cancel") { onCancel() }
                     .buttonStyle(SecondaryButtonStyle())
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 20)
+                    .frame(maxWidth: .infinity)
+
+                Button("Save day") { saveEntry() }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .frame(maxWidth: .infinity)
+                    .disabled(!isValid)
             }
-            .navigationTitle("")
-            .navigationBarHidden(true)
-            .alert("Invalid Input", isPresented: $showingValidationError) {
-                Button("OK") { }
-            } message: {
-                Text(validationMessage)
-            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 22)
+            .padding(.top, 8)
         }
-        .onAppear {
-            loadExistingData()
-        }
-        .background(Color(.systemBackground))
+        .background(Color.breezeBackground.ignoresSafeArea())
+        .onAppear { loadExisting() }
     }
 
-    private var totalHours: Double {
-        workEntries.values.compactMap { Double($0) }.reduce(0, +)
-    }
+    // MARK: - Row
 
-    private var isValidInput: Bool {
-        let entries = workEntries.compactMapValues { Double($0) }
+    private func advancedRow(for type: WorkType) -> some View {
+        HStack(spacing: 13) {
+            // Icon badge
+            Text(type.icon)
+                .font(.system(size: 22))
+                .frame(width: 46, height: 46)
+                .background(
+                    RoundedRectangle(cornerRadius: 13, style: .continuous)
+                        .fill(Color.breezeSurface)
+                        .breezeShadowSm()
+                )
 
-        for (_, hours) in entries {
-            if hours < 0 || hours > 24 {
-                return false
-            }
-        }
-
-        return totalHours <= 24
-    }
-
-    private func loadExistingData() {
-        if let existingEntry = existingEntry {
-            for workType in WorkType.allCases {
-                if let hours = existingEntry.workEntries[workType] {
-                    workEntries[workType] = String(format: "%.1f", hours)
-                }
-            }
-        }
-    }
-
-    private func saveEntry() {
-        guard isValidInput else {
-            validationMessage = "Please enter valid hours (0-24 per type, 0-24 total per day)"
-            showingValidationError = true
-            return
-        }
-
-        // Convert string entries to double entries, filtering out empty/zero values
-        let doubleEntries = workEntries.compactMapValues { stringValue -> Double? in
-            guard let doubleValue = Double(stringValue), doubleValue > 0 else {
-                return nil
-            }
-            return doubleValue
-        }
-
-        var newEntry = WorkDayEntry()
-        newEntry.workEntries = doubleEntries
-        newEntry.isAdvanced = true
-
-        onSave(newEntry)
-    }
-}
-
-// MARK: - Work Type Entry Row Component
-
-struct WorkTypeEntryRow: View {
-    let workType: WorkType
-    let hours: String
-    let onHoursChanged: (String) -> Void
-
-    var body: some View {
-        HStack(spacing: 16) {
-            // Work Type Icon and Label
-            HStack(spacing: 8) {
-                Text(workType.icon)
-                    .font(.system(size: 20))
-
-                Text(workType.displayName)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundColor(.primary)
-                    .frame(width: 60, alignment: .leading)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(type.displayName)
+                    .font(.breezeDisplay(17))
+                    .foregroundStyle(type.inkColor)
+                Text("hours this day")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(Color.breezeInkFaint)
             }
 
             Spacer()
 
-            // Hours Input Field
-            TextField("0.0", text: Binding(
-                get: { hours },
-                set: { onHoursChanged($0) }
-            ))
-            .keyboardType(.decimalPad)
-            .textFieldStyle(AdvancedTextFieldStyle())
-            .frame(width: 80)
+            // Stepper
+            HStack(spacing: 10) {
+                Button {
+                    let cur = hours[type] ?? 0
+                    hours[type] = max(0, cur - 0.5)
+                } label: {
+                    Image(systemName: "minus")
+                        .font(.system(size: 16, weight: .heavy))
+                        .foregroundStyle(type.inkColor)
+                        .frame(width: 32, height: 32)
+                        .background(Circle().fill(Color.breezeSurfaceSunken))
+                }
+                .buttonStyle(.plain)
 
-            Text("hours")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .frame(width: 40, alignment: .leading)
+                Text(formatHours(hours[type] ?? 0))
+                    .font(.breezeDisplay(18))
+                    .foregroundStyle(Color.breezeInk)
+                    .frame(minWidth: 36, alignment: .center)
+
+                Button {
+                    let cur = hours[type] ?? 0
+                    hours[type] = min(24, cur + 0.5)
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 16, weight: .heavy))
+                        .foregroundStyle(type.inkColor)
+                        .frame(width: 32, height: 32)
+                        .background(Circle().fill(Color.breezeSurfaceSunken))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 5)
+            .padding(.vertical, 5)
+            .background(
+                Capsule()
+                    .fill(Color.breezeSurface)
+                    .breezeShadowSm()
+            )
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.vertical, 14)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(workType.backgroundColor.opacity(0.3))
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(type.softColor)
         )
     }
-}
 
-// MARK: - Custom Text Field Style
+    // MARK: - Computed
 
-struct AdvancedTextFieldStyle: TextFieldStyle {
-    func _body(configuration: TextField<Self._Label>) -> some View {
-        configuration
-            .font(.subheadline)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(.systemBackground))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color(.systemGray4), lineWidth: 1)
-                    )
-            )
+    private var totalHours: Double { hours.values.reduce(0, +) }
+    private var isValid: Bool { totalHours > 0 && totalHours <= 24 }
+
+    private func formatHours(_ h: Double) -> String {
+        h.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(h))" : String(format: "%.1f", h)
+    }
+
+    private func loadExisting() {
+        guard let entry = existingEntry else { return }
+        for type in WorkType.allCases {
+            hours[type] = entry.workEntries[type] ?? 0
+        }
+    }
+
+    private func saveEntry() {
+        let filtered = hours.filter { $0.value > 0 }
+        var entry = WorkDayEntry()
+        entry.workEntries = filtered
+        entry.isAdvanced = true
+        onSave(entry)
     }
 }
 
 #Preview {
-    let sampleEntry = WorkDayEntry()
-
-    DayAdvancedEntryView(
-        date: Date(),
-        existingEntry: sampleEntry,
-        onSave: { _ in },
-        onCancel: { }
-    )
+    DayAdvancedEntryView(date: Date(), existingEntry: nil, onSave: { _ in }, onCancel: {})
 }
