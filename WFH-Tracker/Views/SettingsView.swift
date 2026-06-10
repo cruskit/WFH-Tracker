@@ -166,33 +166,6 @@ struct SettingsView: View {
                     }
                     .padding(.top, 22)
 
-                    #if DEBUG
-                    listCard {
-                        Button {
-                            Task { await NotificationService.shared.scheduleTestNotification() }
-                        } label: {
-                            HStack(spacing: 13) {
-                                Image(systemName: "testtube.2")
-                                    .font(.system(size: 16))
-                                    .foregroundStyle(Color.breezeSickInk)
-                                    .frame(width: 36, height: 36)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 11, style: .continuous)
-                                            .fill(Color.breezeSickSoft)
-                                    )
-                                Text("Send Test Notification")
-                                    .font(.system(size: 15.5, weight: .heavy))
-                                    .foregroundStyle(Color.breezeSickInk)
-                                Spacer()
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 14)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    .padding(.top, 12)
-                    #endif
-
                     Spacer(minLength: 32)
                 }
             }
