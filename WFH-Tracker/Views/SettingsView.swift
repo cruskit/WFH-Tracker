@@ -166,6 +166,32 @@ struct SettingsView: View {
                     }
                     .padding(.top, 22)
 
+                    // About section
+                    sectionHeader("About")
+
+                    listCard {
+                        Link(destination: URL(string: "https://thecruskit.com/wfh-tracker/privacy-policy")!) {
+                            HStack(spacing: 13) {
+                                Text("🔒")
+                                    .font(.system(size: 16))
+                                    .frame(width: 36, height: 36)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                            .fill(Color.breezeSurfaceSunken)
+                                    )
+                                Text("Privacy Policy")
+                                    .font(.system(size: 15.5, weight: .heavy))
+                                    .foregroundStyle(Color.breezeInk)
+                                Spacer()
+                                Image(systemName: "arrow.up.right")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundStyle(Color.breezeInkFaint)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 14)
+                        }
+                    }
+
                     Spacer(minLength: 32)
                 }
             }
